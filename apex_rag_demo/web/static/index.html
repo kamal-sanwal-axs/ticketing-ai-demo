@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>APEX AI Helper</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <section id="screen-login" class="card">
+      <h1>APEX AI Helper</h1>
+      <p class="muted">Paste your apex-dev access token once. It stays in this browser only (session storage).</p>
+      <label for="token">Access token</label>
+      <textarea id="token" rows="4" placeholder="Bearer JWT from apex-dev session…"></textarea>
+      <label for="region">Region</label>
+      <select id="region"></select>
+      <button id="btn-login" type="button">Continue</button>
+      <p id="login-error" class="error" hidden></p>
+    </section>
+
+    <section id="screen-main" class="card" hidden>
+      <header class="topbar">
+        <div>
+          <h2 id="welcome-title">Welcome</h2>
+          <p id="welcome-sub" class="muted"></p>
+        </div>
+        <button id="btn-logout" type="button" class="ghost">Sign out</button>
+      </header>
+
+      <div class="profile">
+        <p><strong>Profile</strong></p>
+        <p id="profile-email" class="muted"></p>
+        <p id="profile-region"></p>
+        <button id="btn-change-region" type="button" class="link">Change region</button>
+      </div>
+
+      <div id="region-picker" class="region-picker" hidden>
+        <label for="region-main">Region</label>
+        <select id="region-main"></select>
+        <button id="btn-save-region" type="button">Save</button>
+      </div>
+
+      <p class="prompt">How can I help you today?</p>
+
+      <div id="chat-log" class="chat-log"></div>
+
+      <form id="chat-form" class="chat-form">
+        <input id="chat-input" type="text" placeholder="Search events, ask about venues, org setup…" autocomplete="off" />
+        <label class="checkbox">
+          <input id="execute-writes" type="checkbox" />
+          Live writes (admin create)
+        </label>
+        <button type="submit">Send</button>
+      </form>
+    </section>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

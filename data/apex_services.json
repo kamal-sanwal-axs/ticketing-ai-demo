@@ -1,0 +1,62 @@
+[
+  {
+    "id": "admin",
+    "name": "APEX Admin API",
+    "base_url_env": "APEX_ADMIN_BASE_URL",
+    "default_base_url": "https://api.apex-dev.axsdevops.io/admin",
+    "swagger_url": "https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json",
+    "demo_operations": [
+      "POST /v1/organizations",
+      "POST /v1/client-venues",
+      "GET /v1/organizations/{organizationId}"
+    ]
+  },
+  {
+    "id": "search",
+    "name": "APEX Search API",
+    "base_url_env": "APEX_SEARCH_BASE_URL",
+    "default_base_url": "https://api.apex-dev.axsdevops.io/search",
+    "swagger_url": "https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json",
+    "demo_operations": [
+      "POST /v1/events/suggest",
+      "POST /v1/events",
+      "POST /v1/client-venues"
+    ]
+  },
+  {
+    "id": "events",
+    "name": "APEX Events API",
+    "base_url_env": "APEX_EVENTS_BASE_URL",
+    "default_base_url": "https://api.apex-dev.axsdevops.io/events",
+    "swagger_url": "https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json",
+    "demo_operations": [
+      "POST / (CreateEventRequest)",
+      "GET /{eventId}",
+      "POST /{eventId}/publish"
+    ]
+  },
+  {
+    "id": "inventory",
+    "name": "APEX Inventory API",
+    "base_url_env": "APEX_INVENTORY_BASE_URL",
+    "default_base_url": "https://api.apex-dev.axsdevops.io/inventory",
+    "swagger_url": "https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json",
+    "demo_operations": [
+      "GET /events/{eventId}/zones/primary",
+      "GET /events/{eventId}/zones/statistics",
+      "GET /zones/{zoneId}"
+    ]
+  },
+  {
+    "id": "marketing",
+    "name": "APEX Marketing API",
+    "base_url_env": "APEX_MARKETING_BASE_URL",
+    "default_base_url": "https://api.apex-dev.axsdevops.io/marketing",
+    "swagger_url": "https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json",
+    "demo_operations": [
+      "GET /v1/events",
+      "GET /v1/events/filtered-search",
+      "GET /v1/events/{eventId}/pixels"
+    ]
+  }
+]

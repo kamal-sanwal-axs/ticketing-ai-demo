@@ -1,0 +1,54 @@
+[
+  {
+    "id": "event-search-overview",
+    "text": "APEX Search (apex-search-api) powers event lookup in the admin UI. Use POST /v1/events with a Query string (min 2 characters) and optional Pagination (Size, From). Results come from OpenSearch, not from the LLM."
+  },
+  {
+    "id": "event-suggest",
+    "text": "For quick typeahead-style lookups, POST /v1/events/suggest with Query (min 3 characters) and optional Size (default 5). This is read-only search and does not change inventory or pricing."
+  },
+  {
+    "id": "client-venues",
+    "text": "Client venue configuration (timezone, sales channels, access control) lives in apex-admin-api under /v1/client-venues. Search listing of client venues uses apex-search-api POST /v1/client-venues with optional ClientIds, VenueIds, or OrganizationIds filters."
+  },
+  {
+    "id": "ai-boundary",
+    "text": "The AI helper must not invent event names, prices, or transfer rules. It should only summarize data returned by search and admin APIs. If search fails or returns empty, tell the user and suggest refining the query."
+  },
+  {
+    "id": "create-organization",
+    "text": "Create organization: POST https://api.apex-dev.axsdevops.io/admin/v1/organizations (OpenAPI: admin swagger.json). Body: name (required), currency, region, address (addressLine, city, state, zip, country), optional parentOrganizationId (uuid). Without parent, org is created under AXS root as Principal type. Requires Bearer JWT. Demo defaults: currency USD, region US-West."
+  },
+  {
+    "id": "create-client-venue",
+    "text": "Create client venue: POST https://api.apex-dev.axsdevops.io/admin/v1/client-venues per CreateClientVenueRequestModel in admin swagger. Fields: clientId (uuid, required), name, venueType (Shared, Open, Exclusive), timezoneId (IANA), address, optional venueMaps. Not fan pricing or transfers. Requires valid clientId and Bearer JWT."
+  },
+  {
+    "id": "admin-swagger",
+    "text": "APEX Admin API OpenAPI: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json — organizations, clients, client-venues, roles."
+  },
+  {
+    "id": "search-swagger",
+    "text": "APEX Search API OpenAPI: https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json — POST /v1/events, /v1/events/suggest, orders, customers, client-venues search."
+  },
+  {
+    "id": "events-api",
+    "text": "APEX Events API OpenAPI: https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json — create event POST /, read GET /{eventId}, publish POST /{eventId}/publish, settings, performers, genres. Event lifecycle lives here; search index is separate (search-api)."
+  },
+  {
+    "id": "inventory-api",
+    "text": "APEX Inventory API OpenAPI: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json — zones and ticket types per event: GET /events/{eventId}/zones/primary, zone publish, addons. Pricing and availability config; read before changing zones in prod."
+  },
+  {
+    "id": "marketing-api",
+    "text": "APEX Marketing API OpenAPI: https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json — GET /v1/events, filtered-search, tracking pixels per event. Marketing-facing event list; not the same as admin venue registry."
+  },
+  {
+    "id": "service-catalog",
+    "text": "Demo service catalog is in data/apex_services.json. Run: python -m apex_rag_demo.main --list-services for base URLs and swagger links. All apex-dev calls use Bearer JWT on the api.apex-dev.axsdevops.io gateway."
+  },
+  {
+    "id": "create-safety",
+    "text": "Write operations (organization and client venue create) should run in dry-run mode by default: build the JSON and show the user what would be sent. Live execution needs explicit opt-in (DEMO_EXECUTE_WRITES or --execute) and a dev JWT. Never create production orgs/venues without human review."
+  }
+]
