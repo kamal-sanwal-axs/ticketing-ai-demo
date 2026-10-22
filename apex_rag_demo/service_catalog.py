@@ -16,6 +16,7 @@ class ApexService:
     name: str
     base_url: str
     swagger_url: str
+    swagger_ui_url: str | None
     demo_operations: list[str]
 
 
@@ -37,6 +38,7 @@ def load_catalog() -> list[ApexService]:
                 name=item["name"],
                 base_url=_resolve_base_url(item),
                 swagger_url=item["swagger_url"],
+                swagger_ui_url=item.get("swagger_ui_url"),
                 demo_operations=list(item.get("demo_operations", [])),
             )
         )
@@ -51,9 +53,19 @@ def get_service(service_id: str) -> ApexService | None:
 
 
 def format_catalog_markdown() -> str:
-    lines = ["| Service | Base URL | OpenAPI |", "|---------|----------|---------|"]
+    lines = [
+        "| Service | Base URL | OpenAPI | Swagger UI |",
+        "|---------|----------|---------|------------|",
+    ]
     for svc in load_catalog():
-        lines.append(
-            f"| **{svc.name}** | `{svc.base_url}` | [swagger]({svc.swagger_url}) |",
+        ui = (
+            f"[UI]({svc.swagger_ui_url})"
+            if svc.swagger_ui_url
+            else "—"
         )
+        lines.append(
+            f"| **{svc.name}** | `{svc.base_url}` | [openapi]({svc.swagger_url}) | {ui} |",
+        )
+    lines.append("")
+    lines.append("Full index: `docs/API_LINKS.md` in the project root.")
     return "\n".join(lines)

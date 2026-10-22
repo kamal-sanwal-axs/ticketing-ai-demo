@@ -1,121 +1,122 @@
-# APEX ticketing AI demo (LangGraph + llama.cpp)
+# APEX ticketing AI demo
 
-Small demo: **RAG** over internal KB + routed calls to:
+LangGraph + local **llama.cpp** (chat + embeddings) with **RAG** and routed calls to **apex-dev** APIs.
 
-| Intent | API | Method |
-|--------|-----|--------|
-| Event search | apex-search-api | `POST /v1/events/suggest` (read-only) |
-| Create organization | apex-admin-api | `POST /v1/organizations` |
-| Create client venue | apex-admin-api | `POST /v1/client-venues` |
+**Project path:** `/Users/kamals/models/ticketing-ai-demo`
 
-**Writes default to dry-run** (preview JSON only). Pass `--execute` or `DEMO_EXECUTE_WRITES=true` for live creates (dev JWT required).
-
-## Architecture
-
-```text
-question → retrieve_kb → detect_intent → plan_action → execute_action → synthesize_answer
-              embed          chat            chat          search-api / admin-api
-```
-
-## Prerequisites
-
-1. **Chat** llama.cpp server (generative), e.g. port **8000**
-2. **Embedding** llama.cpp server (`--embedding`), e.g. port **8001** — use a GGUF embedding model (not the instruct model), e.g. `nomic-embed-text-v1.5-GGUF`
-3. Optional: **apex-search-api** running locally (`APEX-DEV` profile → `http://localhost:5005`) with a valid JWT
-
-## Setup
+## Quick start (web UI)
 
 ```bash
 cd /Users/kamals/models/ticketing-ai-demo
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
-# edit .env: CHAT_MODEL, EMBED_MODEL, APEX_BEARER_TOKEN
+cp .env.example .env   # optional: CHAT_MODEL, EMBED_MODEL for llama.cpp
+
+uvicorn apex_rag_demo.web.app:app --reload --port 8080
 ```
 
-### API hosts (apex-dev)
+1. Open [http://localhost:8080](http://localhost:8080)
+2. Paste a JWT from [apex-dev](https://apex-dev.axsdevops.io/login)
+3. Choose region → chat (“How can I help you today?”)
 
-Full catalog: `data/apex_services.json` or:
+Token stays in **sessionStorage**; each request sends `Authorization: Bearer …` to this app, which forwards it to APEX APIs.
+
+## What it does
+
+```text
+question → retrieve_kb → detect_intent → plan_action → execute_action → synthesize_answer
+              embed          chat            chat          apex-dev APIs
+```
+
+| Intent | Gateway call |
+|--------|----------------|
+| `search_events` | `POST /search/v1/events/suggest` |
+| `create_organization` | `POST /admin/v1/organizations` (dry-run unless `--execute`) |
+| `create_client_venue` | `POST /admin/v1/client-venues` (dry-run unless `--execute`) |
+| `get_event` | `GET /events/{eventId}` |
+| `inventory_zones` | `GET /inventory/events/{eventId}/zones/primary` |
+| `marketing_events` | `GET /marketing/v1/events` |
+
+**API reference (all swagger links):** [docs/API_LINKS.md](docs/API_LINKS.md)
+
+## Prerequisites
+
+### 1. llama.cpp (local)
+
+| Role | Default | Example |
+|------|---------|---------|
+| Chat | `CHAT_BASE_URL` → port 8000 | `~/models/Qwen2.5-0.5B-Instruct-GGUF/qwen2.5-0.5b-instruct-q4_k_m.gguf` |
+| Embeddings | `EMBED_BASE_URL` → port 8001, `--embedding` | e.g. `nomic-embed-text-v1.5-GGUF` |
+
+```bash
+python3 -m llama_cpp.server --model ~/models/Qwen2.5-0.5B-Instruct-GGUF/qwen2.5-0.5b-instruct-q4_k_m.gguf --n_gpu_layers -1 --port 8000
+python3 -m llama_cpp.server --embedding --model ~/models/nomic-embed/....gguf --port 8001
+```
+
+If the embedding server is down, set `RAG_KEYWORD_FALLBACK=true` (see `.env.example`).
+
+### 2. apex-dev APIs
+
+Default hosts (no local .NET required):
+
+| Service | Base URL | OpenAPI |
+|---------|----------|---------|
+| Admin | https://api.apex-dev.axsdevops.io/admin | [swagger.json](https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json) |
+| **Search** | https://api.apex-dev.axsdevops.io/search | [swagger.json](https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json) · [Swagger UI](https://api.apex-dev.axsdevops.io/search/swagger/index.html) |
+| Events | https://api.apex-dev.axsdevops.io/events | [swagger.json](https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json) |
+| Inventory | https://api.apex-dev.axsdevops.io/inventory | [swagger.json](https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json) |
+| Marketing | https://api.apex-dev.axsdevops.io/marketing | [swagger.json](https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json) |
+
+List from the app:
 
 ```bash
 python -m apex_rag_demo.main --list-services
 ```
 
-| Service | OpenAPI |
-|---------|---------|
-| Admin | https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json |
-| Search | https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json |
-| Events | https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json |
-| Inventory | https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json |
-| Marketing | https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json |
-
-**Demo intents → calls**
-
-| Intent | API |
-|--------|-----|
-| `search_events` | Search `POST /v1/events/suggest` |
-| `create_organization` / `create_client_venue` | Admin POST (dry-run default) |
-| `get_event` | Events `GET /{eventId}` |
-| `inventory_zones` | Inventory `GET /events/{eventId}/zones/primary` |
-| `marketing_events` | Marketing `GET /v1/events` |
-
 ### Auth
 
-Copy a dev JWT from the browser after logging into [apex-dev](https://apex-dev.axsdevops.io) (same token the Control MFE uses):
+- **Web:** paste JWT on first screen.
+- **CLI:** `export APEX_BEARER_TOKEN="<jwt>"` and `APEX_MOCK=false`.
+- **Offline:** `APEX_MOCK=true` or empty token → mock JSON (still runs LangGraph + llama).
 
-```bash
-export APEX_BEARER_TOKEN="<jwt>"
-export APEX_MOCK=false
-```
-
-### Without live APIs
-
-Set `APEX_MOCK=true` or leave `APEX_BEARER_TOKEN` empty — mock JSON responses for offline graph + llama testing.
-
-### Local APIs instead of gateway
+### Local APIs (optional)
 
 ```bash
 export APEX_SEARCH_BASE_URL=http://localhost:5005
 export APEX_ADMIN_BASE_URL=http://localhost:5000
 ```
 
-## Web UI (token + welcome + chat)
-
-```bash
-cd ticketing-ai-demo && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn apex_rag_demo.web.app:app --reload --port 8080
-```
-
-Open http://localhost:8080 — paste your apex-dev JWT, pick a region, then chat. Token is stored in **sessionStorage** only (not sent to our server except per request as `Authorization`).
-
 ## CLI
 
 ```bash
-python -m apex_rag_demo.main "What events match arena tour?"
-python -m apex_rag_demo.main "Create organization Acme Events West"
-python -m apex_rag_demo.main "Create client venue Portland Open Arena for client <uuid>"
-python -m apex_rag_demo.main "List marketing events"
-python -m apex_rag_demo.main "Show inventory zones for event <event-uuid>"
-python -m apex_rag_demo.main --json "How does event search work in APEX?"
-
-# Live POST (dev only, with token + apex-admin-api running):
-python -m apex_rag_demo.main --execute "Create organization Demo Org $(date +%s)"
+python -m apex_rag_demo.main "Find events matching arena"
+python -m apex_rag_demo.main "Create organization Acme West"
+python -m apex_rag_demo.main --json "How does event search work?"
+python -m apex_rag_demo.main --execute "Create organization Demo $(date +%s)"  # live POST
 ```
 
-## Related services (not wired in this demo)
+## Configuration
 
-| API | Role |
-|-----|------|
-| `apex-admin-api` | Client venue config (`/v1/client-venues/{id}`) |
-| `apex-inventory-api` | Ticket types / zones |
-| `apex-events-api` | Event orchestration (not search) |
+Copy [`.env.example`](.env.example) → `.env`. Important keys:
 
-Extend `apex_rag_demo/clients/` and add graph nodes for admin venue GET after you have a `clientVenueId` from search.
+- `APEX_SEARCH_BASE_URL`, `APEX_SEARCH_SWAGGER_URL`
+- `APEX_ADMIN_*`, `APEX_EVENTS_*`, `APEX_INVENTORY_*`, `APEX_MARKETING_*`
+- `DEMO_CLIENT_ID` — for client-venue create when UUID not in the message
+- `DEMO_EXECUTE_WRITES` — default `false`; web UI has a “Live writes” checkbox
 
-## Files
+## Project layout
 
-- `data/kb.json` — tiny KB for RAG
-- `apex_rag_demo/graph.py` — LangGraph workflow
-- `apex_rag_demo/clients/apex_search.py` — HTTP client for suggest
+| Path | Purpose |
+|------|---------|
+| `apex_rag_demo/web/` | FastAPI + static HTML UI |
+| `apex_rag_demo/graph.py` | LangGraph workflow |
+| `apex_rag_demo/clients/` | HTTP clients per API |
+| `data/kb.json` | RAG knowledge snippets |
+| `data/apex_services.json` | Service catalog (URLs + swagger) |
+| `docs/API_LINKS.md` | Central link index |
+
+After editing `data/kb.json`, delete `.cache/kb_vectors.npz` to rebuild embeddings.
+
+## Safety
+
+Create flows default to **dry-run** (preview request body only). Use `--execute` or the web checkbox only in **dev**, with a token that has the right admin permissions.

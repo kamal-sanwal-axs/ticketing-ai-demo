@@ -45,7 +45,7 @@
   },
   {
     "id": "service-catalog",
-    "text": "Demo service catalog is in data/apex_services.json. Run: python -m apex_rag_demo.main --list-services for base URLs and swagger links. All apex-dev calls use Bearer JWT on the api.apex-dev.axsdevops.io gateway."
+    "text": "API link index: docs/API_LINKS.md in ticketing-ai-demo (~/models/ticketing-ai-demo). Search OpenAPI: https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json and UI: https://api.apex-dev.axsdevops.io/search/swagger/index.html. Run python -m apex_rag_demo.main --list-services for the full catalog. All apex-dev calls use Bearer JWT on api.apex-dev.axsdevops.io."
   },
   {
     "id": "create-safety",

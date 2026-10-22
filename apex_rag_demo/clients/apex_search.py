@@ -6,7 +6,7 @@ from typing import Any
 import httpx
 
 from apex_rag_demo.clients.http_common import auth_headers, use_mock_api
-from apex_rag_demo.config import APEX_SEARCH_BASE_URL
+from apex_rag_demo.config import APEX_SEARCH_BASE_URL, APEX_SEARCH_SWAGGER_URL
 
 MOCK_SUGGEST_RESPONSE: dict[str, Any] = {
     "suggestions": [
@@ -19,7 +19,12 @@ MOCK_SUGGEST_RESPONSE: dict[str, Any] = {
 def search_events_suggest(query: str, size: int = 5) -> dict[str, Any]:
     """POST /v1/events/suggest — smallest read-only search surface."""
     if use_mock_api():
-        return {**MOCK_SUGGEST_RESPONSE, "_mock": True, "_query": query}
+        return {
+            **MOCK_SUGGEST_RESPONSE,
+            "_mock": True,
+            "_openapi": APEX_SEARCH_SWAGGER_URL,
+            "_query": query,
+        }
 
     url = f"{APEX_SEARCH_BASE_URL}/v1/events/suggest"
     body = {"query": query, "size": size}
@@ -41,6 +46,7 @@ def search_events(query: str, page_size: int = 5) -> dict[str, Any]:
                 }
             ],
             "_mock": True,
+            "_openapi": APEX_SEARCH_SWAGGER_URL,
         }
 
     url = f"{APEX_SEARCH_BASE_URL}/v1/events"
