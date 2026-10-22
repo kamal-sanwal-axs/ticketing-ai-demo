@@ -9,6 +9,15 @@ from pydantic import BaseModel, Field
 
 from apex_rag_demo.auth import REGIONS, profile_from_token, validate_token_with_admin
 from apex_rag_demo.graph import run_demo
+from apex_rag_demo.help_content import (
+    HELP_SUMMARY,
+    IDENTITY_SUMMARY,
+    WELCOME_SUMMARY,
+    is_general_help_question,
+)
+from apex_rag_demo.intent_helpers import is_assistant_meta_question, is_greeting
+from apex_rag_demo.response_formatters import strip_ui_region
+from apex_rag_demo.ui_display import build_ui_display
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -36,6 +45,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
     intent: str
+    display: dict | None = None
 
 
 def _extract_bearer(authorization: str | None) -> str:
@@ -99,4 +109,16 @@ async def chat(
         execute_writes=body.execute_writes,
         bearer_token=token,
     )
-    return ChatResponse(answer=state["answer"], intent=state["intent"])
+    display = build_ui_display(state)
+    summary = state["answer"]
+    if display and display.get("type") == "table" and display.get("count") is not None:
+        summary = f"Found {display['count']} result(s)."
+    bare_q = strip_ui_region(question)
+    if state["intent"] == "explain" and display:
+        if is_assistant_meta_question(bare_q):
+            summary = IDENTITY_SUMMARY
+        elif is_greeting(bare_q):
+            summary = WELCOME_SUMMARY
+        elif is_general_help_question(bare_q):
+            summary = HELP_SUMMARY
+    return ChatResponse(answer=summary, intent=state["intent"], display=display)

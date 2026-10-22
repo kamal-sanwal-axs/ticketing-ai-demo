@@ -1,23 +1,19 @@
 from __future__ import annotations
 
-import json
-from dataclasses import dataclass
-
 import numpy as np
 
-from apex_rag_demo.clients.llama import embed_texts
-from apex_rag_demo.config import CACHE_DIR, INDEX_PATH, KB_PATH, RAG_KEYWORD_FALLBACK, TOP_K
+from apex_rag_demo.config import (
+    CACHE_DIR,
+    INDEX_PATH,
+    RAG_KEYWORD_FALLBACK,
+    RAG_VECTOR_STORE,
+    TOP_K,
+)
+from apex_rag_demo.rag.embeddings import embed_texts
+from apex_rag_demo.rag.kb import KbChunk, load_kb
 
-
-@dataclass
-class KbChunk:
-    id: str
-    text: str
-
-
-def load_kb() -> list[KbChunk]:
-    raw = json.loads(KB_PATH.read_text(encoding="utf-8"))
-    return [KbChunk(id=item["id"], text=item["text"]) for item in raw]
+# Re-export for callers
+__all__ = ["KbChunk", "load_kb", "retrieve", "build_or_load_index"]
 
 
 def _normalize(vectors: np.ndarray) -> np.ndarray:
@@ -65,17 +61,34 @@ def _keyword_retrieve(question: str, chunks: list[KbChunk], top_k: int) -> list[
     return [text for _, text in scored[:top_k]]
 
 
-def retrieve(question: str, top_k: int = TOP_K) -> list[str]:
+def _retrieve_numpy(question: str, top_k: int) -> list[str]:
     chunks, matrix = build_or_load_index()
     if matrix.shape[1] == 1:
         return _keyword_retrieve(question, chunks, top_k)
+    q = np.array(embed_texts([question]), dtype=np.float32)
+    q = _normalize(q)[0]
+    scores = matrix @ q
+    order = np.argsort(-scores)[:top_k]
+    return [chunks[i].text for i in order]
+
+
+def retrieve(question: str, top_k: int = TOP_K) -> list[str]:
+    if RAG_VECTOR_STORE == "chroma":
+        try:
+            from apex_rag_demo.rag.chroma_store import query_chroma
+
+            return query_chroma(question, top_k)
+        except Exception:
+            if not RAG_KEYWORD_FALLBACK:
+                raise
+            try:
+                return _retrieve_numpy(question, top_k)
+            except Exception:
+                return _keyword_retrieve(question, load_kb(), top_k)
+
     try:
-        q = np.array(embed_texts([question]), dtype=np.float32)
-        q = _normalize(q)[0]
-        scores = matrix @ q
-        order = np.argsort(-scores)[:top_k]
-        return [chunks[i].text for i in order]
+        return _retrieve_numpy(question, top_k)
     except Exception:
         if not RAG_KEYWORD_FALLBACK:
             raise
-        return _keyword_retrieve(question, chunks, top_k)
+        return _keyword_retrieve(question, load_kb(), top_k)

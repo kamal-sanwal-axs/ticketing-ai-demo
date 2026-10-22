@@ -28,6 +28,7 @@ Use the same **Bearer JWT** in this demo (web UI or `APEX_BEARER_TOKEN` for CLI)
 | Demo intent | Method | URL (under gateway) |
 |-------------|--------|---------------------|
 | `search_events` | POST | `/search/v1/events/suggest` |
+| `list_client_venues` | POST | `/search/v1/client-venues` |
 | `create_organization` | POST | `/admin/v1/organizations` |
 | `create_client_venue` | POST | `/admin/v1/client-venues` |
 | `get_event` | GET | `/events/{eventId}` |

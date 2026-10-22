@@ -10,17 +10,10 @@ from apex_rag_demo.clients import (
     apex_marketing,
     apex_search,
 )
-from apex_rag_demo.clients.llama import chat_completion
 from apex_rag_demo.config import DEMO_EXECUTE_WRITES
 from apex_rag_demo.planning import classify_intent, plan_for_intent
 from apex_rag_demo.rag.index import retrieve
-
-_ANSWER_SYSTEM = """You are an internal APEX admin helper demo.
-Rules:
-- Use ONLY the KB snippets and API JSON for factual claims.
-- For create flows: if _dry_run is true, say the request was NOT sent and show what would be posted.
-- Never invent organization or venue ids except those in the API JSON.
-- Be concise (under 10 sentences)."""
+from apex_rag_demo.response_formatters import format_deterministic, summarize_with_llm
 
 
 class DemoState(TypedDict):
@@ -58,7 +51,18 @@ def execute_action(state: DemoState) -> DemoState:
 
     try:
         if intent == "search_events":
-            payload = apex_search.search_events_suggest(plan.get("query") or state["search_query"])
+            query = plan.get("query") or state["search_query"]
+            payload = apex_search.search_events_suggest(query)
+            suggestions = (payload or {}).get("suggestions") or (payload or {}).get("Suggestions") or []
+            events = (payload or {}).get("events") or (payload or {}).get("Events") or []
+            if not suggestions and not events:
+                payload = apex_search.search_events(query)
+            return {**state, "api_payload": payload, "api_error": None}
+        if intent == "list_client_venues":
+            payload = apex_search.search_client_venues(
+                page_size=int(plan.get("pageSize") or 25),
+                organization_ids=plan.get("organizationIds") or None,
+            )
             return {**state, "api_payload": payload, "api_error": None}
         if intent == "create_organization":
             body = apex_admin.build_create_organization_body(plan)
@@ -71,45 +75,41 @@ def execute_action(state: DemoState) -> DemoState:
         if intent == "get_event":
             event_id = plan.get("eventId") or ""
             if not event_id:
-                raise ValueError("eventId (uuid) required for get_event intent")
+                return {**state, "api_payload": None, "api_error": None}
             payload = apex_events.get_event(event_id)
             return {**state, "api_payload": payload, "api_error": None}
         if intent == "inventory_zones":
             event_id = plan.get("eventId") or ""
             if not event_id:
-                raise ValueError("eventId (uuid) required for inventory_zones intent")
+                return {**state, "api_payload": None, "api_error": None}
             payload = apex_inventory.get_event_primary_zones(event_id)
             return {**state, "api_payload": payload, "api_error": None}
         if intent == "marketing_events":
             payload = apex_marketing.list_events()
             return {**state, "api_payload": payload, "api_error": None}
-        return {**state, "api_payload": {"note": "explain-only intent"}, "api_error": None}
+        if intent == "explain":
+            return {**state, "api_payload": None, "api_error": None}
+        return {**state, "api_payload": {"note": "unhandled intent"}, "api_error": None}
     except Exception as exc:  # noqa: BLE001 — demo boundary
         return {**state, "api_payload": None, "api_error": str(exc)}
 
 
 def synthesize_answer(state: DemoState) -> DemoState:
-    kb_block = "\n\n".join(f"- {s}" for s in state["kb_snippets"])
-    api_block = (
-        apex_admin.format_payload(state["api_payload"])
-        if state["api_payload"]
-        else f"(no API data: {state['api_error'] or 'unknown error'})"
+    intent = state["intent"]
+    answer = format_deterministic(
+        intent,
+        state["question"],
+        state["api_payload"],
+        state["api_error"],
+        action_plan=state["action_plan"],
+        execute_writes=state["execute_writes"],
+        kb_snippets=state["kb_snippets"],
     )
-    user = f"""User question: {state['question']}
+    if answer is not None:
+        return {**state, "answer": answer}
 
-Intent: {state['intent']}
-Execute writes (live POST): {state['execute_writes']}
-
-KB snippets:
-{kb_block}
-
-Action plan (extracted):
-{apex_admin.format_payload(state['action_plan'], max_chars=2000)}
-
-API response JSON:
-{api_block}
-"""
-    answer = chat_completion(_ANSWER_SYSTEM, user, temperature=0.3)
+    api_block = apex_admin.format_payload(state["api_payload"]) if state["api_payload"] else ""
+    answer = summarize_with_llm(state["question"], api_block or state["api_error"] or "")
     return {**state, "answer": answer}
 
 

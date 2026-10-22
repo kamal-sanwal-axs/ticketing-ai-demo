@@ -12,15 +12,31 @@ DATA_DIR = _ROOT / "data"
 KB_PATH = DATA_DIR / "kb.json"
 CACHE_DIR = _ROOT / ".cache"
 INDEX_PATH = CACHE_DIR / "kb_vectors.npz"
+MODELS_EMBEDDINGS_DIR = _ROOT / "models" / "embeddings"
 
 CHAT_BASE_URL = os.getenv("CHAT_BASE_URL", "http://localhost:8000/v1")
 CHAT_MODEL = os.getenv("CHAT_MODEL", "")
-EMBED_BASE_URL = os.getenv("EMBED_BASE_URL", "http://localhost:8001/v1")
-# Path or alias accepted by your embedding llama.cpp server (--embedding)
+
+# RAG embeddings: http (default, server on :8081) or sentence-transformers (in-process)
+EMBEDDING_BACKEND = os.getenv("RAG_EMBEDDING_BACKEND", "http").lower()
+SENTENCE_TRANSFORMERS_MODEL = os.getenv(
+    "SENTENCE_TRANSFORMERS_MODEL",
+    "sentence-transformers/all-MiniLM-L6-v2",
+)
+
+EMBED_BASE_URL = os.getenv("EMBED_BASE_URL", "http://localhost:8081/v1")
+EMBED_SERVER_PORT = int(os.getenv("EMBED_SERVER_PORT", "8081"))
 EMBED_MODEL = os.getenv(
     "EMBED_MODEL",
-    "nomic-embed-text-v1.5.f16.gguf",
+    SENTENCE_TRANSFORMERS_MODEL,
 )
+
+# Vector store: chroma (Docker) or numpy file cache (.cache/kb_vectors.npz)
+RAG_VECTOR_STORE = os.getenv("RAG_VECTOR_STORE", "chroma").lower()
+CHROMA_HOST = os.getenv("CHROMA_HOST", "localhost")
+CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8002"))
+CHROMA_COLLECTION = os.getenv("CHROMA_COLLECTION", "apex_kb")
+
 RAG_KEYWORD_FALLBACK = os.getenv("RAG_KEYWORD_FALLBACK", "true").lower() in (
     "1",
     "true",

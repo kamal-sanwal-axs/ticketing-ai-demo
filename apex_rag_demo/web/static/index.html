@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
+  <div class="page-shell">
   <div id="app">
     <section id="screen-login" class="card">
       <h1>APEX AI Helper</h1>
@@ -41,9 +42,10 @@
         <button id="btn-save-region" type="button">Save</button>
       </div>
 
+      <div class="chat-panel">
       <p class="prompt">How can I help you today?</p>
 
-      <div id="chat-log" class="chat-log"></div>
+      <div id="chat-log" class="chat-log" role="log" aria-live="polite"></div>
 
       <form id="chat-form" class="chat-form">
         <input id="chat-input" type="text" placeholder="Search events, ask about venues, org setup…" autocomplete="off" />
@@ -53,6 +55,7 @@
         </label>
         <button type="submit">Send</button>
       </form>
+      </div>
     </section>
   </div>
   <footer class="footer muted">
@@ -62,6 +65,7 @@
     ·
     <a href="https://apex-dev.axsdevops.io/login" target="_blank" rel="noopener">apex-dev login</a>
   </footer>
+  </div>
   <script src="/static/app.js"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 # APEX ticketing AI demo
 
-LangGraph + local **llama.cpp** (chat + embeddings) with **RAG** and routed calls to **apex-dev** APIs.
+LangGraph + local **llama.cpp** (chat) with **RAG** (**sentence-transformers** + **ChromaDB**) and routed calls to **apex-dev** APIs.
 
 **Project path:** `/Users/kamals/models/ticketing-ai-demo`
 
@@ -10,10 +10,19 @@ LangGraph + local **llama.cpp** (chat + embeddings) with **RAG** and routed call
 cd /Users/kamals/models/ticketing-ai-demo
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # optional: CHAT_MODEL, EMBED_MODEL for llama.cpp
+cp .env.example .env
 
-uvicorn apex_rag_demo.web.app:app --reload --port 8080
+# RAG: embedding model + :8081 server + ChromaDB (see docs/RAG_STACK.md)
+python scripts/download_embedding_model.py
+./scripts/run-embed-server.sh          # keep running (port 8081)
+docker compose up -d chroma
+python -m apex_rag_demo.rag.sync_index
+
+./scripts/run-web.sh
+# or: source .venv/bin/activate && uvicorn apex_rag_demo.web.app:app --reload --port 8080
 ```
+
+Use the **project** `.venv` here — not `~/.venv-llama-cpp` (that env is only for `llama_cpp.server`).
 
 1. Open [http://localhost:8080](http://localhost:8080)
 2. Paste a JWT from [apex-dev](https://apex-dev.axsdevops.io/login)
@@ -25,37 +34,48 @@ Token stays in **sessionStorage**; each request sends `Authorization: Bearer …
 
 ```text
 question → retrieve_kb → detect_intent → plan_action → execute_action → synthesize_answer
-              embed          chat            chat          apex-dev APIs
+              embed :8081 + Chroma           llama chat :8000            apex-dev APIs
 ```
 
 | Intent | Gateway call |
 |--------|----------------|
 | `search_events` | `POST /search/v1/events/suggest` |
+| `list_client_venues` | `POST /search/v1/client-venues` (read-only list) |
 | `create_organization` | `POST /admin/v1/organizations` (dry-run unless `--execute`) |
 | `create_client_venue` | `POST /admin/v1/client-venues` (dry-run unless `--execute`) |
 | `get_event` | `GET /events/{eventId}` |
 | `inventory_zones` | `GET /inventory/events/{eventId}/zones/primary` |
 | `marketing_events` | `GET /marketing/v1/events` |
 
-**API reference (all swagger links):** [docs/API_LINKS.md](docs/API_LINKS.md)
+**API reference (all swagger links):** [docs/API_LINKS.md](docs/API_LINKS.md)  
+**Events vs client venues & MCP:** [docs/ROUTING_AND_MCP.md](docs/ROUTING_AND_MCP.md)
 
 ## Prerequisites
 
-### 1. llama.cpp (local)
+### 1. RAG (embeddings + vectors)
+
+| Component | Default | Notes |
+|-----------|---------|--------|
+| Embeddings | **:8081** OpenAI `/v1/embeddings` | `./scripts/run-embed-server.sh` (after `download_embedding_model.py`) |
+| Vector DB | Chroma @ `localhost:8002` | `docker compose up -d chroma` |
+| Sync KB | `python -m apex_rag_demo.rag.sync_index` | After editing `data/kb.json` (embed server must be up) |
+
+Full details: **[docs/RAG_STACK.md](docs/RAG_STACK.md)**
+
+### 2. llama.cpp (chat only)
 
 | Role | Default | Example |
 |------|---------|---------|
 | Chat | `CHAT_BASE_URL` → port 8000 | `~/models/Qwen2.5-0.5B-Instruct-GGUF/qwen2.5-0.5b-instruct-q4_k_m.gguf` |
-| Embeddings | `EMBED_BASE_URL` → port 8001, `--embedding` | e.g. `nomic-embed-text-v1.5-GGUF` |
 
 ```bash
 python3 -m llama_cpp.server --model ~/models/Qwen2.5-0.5B-Instruct-GGUF/qwen2.5-0.5b-instruct-q4_k_m.gguf --n_gpu_layers -1 --port 8000
-python3 -m llama_cpp.server --embedding --model ~/models/nomic-embed/....gguf --port 8001
 ```
 
-If the embedding server is down, set `RAG_KEYWORD_FALLBACK=true` (see `.env.example`).
+Ports: **8000** chat · **8081** embed · **8002** Chroma · **8080** web.  
+Optional: `RAG_EMBEDDING_BACKEND=sentence-transformers` (no :8081 process) or `run-llama-embed-server.sh` for GGUF embed.
 
-### 2. apex-dev APIs
+### 3. apex-dev APIs
 
 Default hosts (no local .NET required):
 
@@ -112,10 +132,13 @@ Copy [`.env.example`](.env.example) → `.env`. Important keys:
 | `apex_rag_demo/graph.py` | LangGraph workflow |
 | `apex_rag_demo/clients/` | HTTP clients per API |
 | `data/kb.json` | RAG knowledge snippets |
+| `docker-compose.yml` | ChromaDB service |
+| `docs/RAG_STACK.md` | Embeddings + Chroma setup |
+| `models/embeddings/` | Downloaded sentence-transformers weights (gitignored) |
 | `data/apex_services.json` | Service catalog (URLs + swagger) |
 | `docs/API_LINKS.md` | Central link index |
 
-After editing `data/kb.json`, delete `.cache/kb_vectors.npz` to rebuild embeddings.
+After editing `data/kb.json`, run `python -m apex_rag_demo.rag.sync_index` (Chroma) or delete `.cache/kb_vectors.npz` if using `RAG_VECTOR_STORE=numpy`.
 
 ## Safety
 

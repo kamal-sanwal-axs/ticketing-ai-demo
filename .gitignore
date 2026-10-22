@@ -1,0 +1,7 @@
+.venv/
+.env
+.cache/
+models/embeddings/
+__pycache__/
+*.pyc
+.pytest_cache/
