@@ -1,0 +1,53 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "AXS B2B Reports API (unified-api-reports)",
+    "description": "Flash reports, inventory reports, and back-office exports served under the /reports gateway path (axs-b2b-reports MFE).",
+    "version": "1.0.0"
+  },
+  "servers": [{ "url": "https://api.apex-dev.axsdevops.io/reports" }],
+  "paths": {
+    "/v1/Sales/event": {
+      "put": {
+        "tags": ["FlashReports", "Sales"],
+        "summary": "Flash sales report for selected events (context and event ids).",
+        "operationId": "getSalesReportByEvent"
+      }
+    },
+    "/v1/Sales/dateRange": {
+      "put": {
+        "tags": ["FlashReports", "Sales"],
+        "summary": "Flash sales report for a date range and context.",
+        "operationId": "getSalesReportByDateRange"
+      }
+    },
+    "/v1/TicketLifeCycle/event": {
+      "put": {
+        "tags": ["FlashReports", "TicketLifeCycle"],
+        "summary": "Ticket lifecycle flash report for an event.",
+        "operationId": "getTicketLifeCycleByEvent"
+      }
+    },
+    "/v1/TicketInTransfer/event": {
+      "put": {
+        "tags": ["FlashReports", "TicketInTransfer"],
+        "summary": "Tickets in transfer flash report for an event.",
+        "operationId": "getTicketInTransferByEvent"
+      }
+    },
+    "/v1/Inventory/contexts/{contextId}/events/{eventId}/report": {
+      "get": {
+        "tags": ["InventoryReports"],
+        "summary": "Inventory report for a context and event (axs-b2b-reports inventory tab).",
+        "operationId": "getInventoryEventReport"
+      }
+    },
+    "/v1/Timezones/timezones": {
+      "get": {
+        "tags": ["FlashReports"],
+        "summary": "List timezones available for flash reports.",
+        "operationId": "listReportTimezones"
+      }
+    }
+  }
+}

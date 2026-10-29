@@ -49,14 +49,21 @@ def search_events_suggest(query: str, size: int = 5) -> dict[str, Any]:
         return response.json()
 
 
-def search_events(query: str, page_size: int = 5) -> dict[str, Any]:
+def search_events(
+    query: str | None = None,
+    page_size: int = 5,
+    *,
+    event_ids: list[str] | None = None,
+    venue_filters: list[str] | None = None,
+    event_status_filters: list[str] | None = None,
+) -> dict[str, Any]:
     """POST /v1/events — full search (used if suggest is too thin)."""
     if use_mock_api():
         return {
             "events": [
                 {
                     "id": "demo-event-1",
-                    "name": f"Demo result for '{query}'",
+                    "name": f"Demo result for '{query or event_ids}'",
                     "status": "Published",
                 }
             ],
@@ -65,12 +72,38 @@ def search_events(query: str, page_size: int = 5) -> dict[str, Any]:
         }
 
     url = f"{APEX_SEARCH_BASE_URL}/v1/events"
-    body = {
-        "query": query,
+    body: dict[str, Any] = {
         "pagination": {"size": page_size, "from": 0},
     }
+    if query:
+        body["query"] = query
+    if event_ids:
+        body["eventIds"] = event_ids
+    if venue_filters:
+        body["venueFilters"] = venue_filters
+    if event_status_filters:
+        body["eventStatusFilters"] = event_status_filters
     with httpx.Client(timeout=30.0) as client:
         response = client.post(url, headers=auth_headers(), json=body)
+        response.raise_for_status()
+        return response.json()
+
+
+def get_client_venue(client_venue_id: str) -> dict[str, Any]:
+    """GET /v1/client-venues/{clientVenueId} — search-api registry."""
+    url = f"{APEX_SEARCH_BASE_URL}/v1/client-venues/{client_venue_id}"
+    if use_mock_api():
+        return {
+            "_mock": True,
+            "_openapi": APEX_SEARCH_SWAGGER_URL,
+            "clientVenue": {
+                "id": client_venue_id,
+                "venue": {"name": "Demo Arena"},
+                "client": {"name": "Demo Client"},
+            },
+        }
+    with httpx.Client(timeout=30.0) as client:
+        response = client.get(url, headers=auth_headers())
         response.raise_for_status()
         return response.json()
 
@@ -100,6 +133,98 @@ def search_client_venues(
     if venue_ids:
         body["venueIds"] = venue_ids
 
+    with httpx.Client(timeout=60.0) as client:
+        response = client.post(url, headers=auth_headers(), json=body)
+        response.raise_for_status()
+        return response.json()
+
+
+MOCK_ORDERS_RESPONSE: dict[str, Any] = {
+    "orders": [
+        {
+            "orderNumber": "ORD-1001",
+            "customerName": "Demo Customer",
+            "email": "fan@example.com",
+            "paymentStatus": "Paid",
+        },
+    ],
+    "_mock": True,
+}
+
+
+def search_customers(
+    *,
+    keyword: str | None = None,
+    search_values: str | None = None,
+    page_size: int = 25,
+) -> dict[str, Any]:
+    """POST /v1/customers — axs-apex-search Customers (b2b_search_customers)."""
+    if use_mock_api():
+        return {
+            "customers": [
+                {
+                    "accountNumber": "ACC-100",
+                    "customerName": "Demo Customer",
+                    "email": "fan@example.com",
+                },
+            ],
+            "_mock": True,
+            "_openapi": APEX_SEARCH_SWAGGER_URL,
+        }
+
+    url = f"{APEX_SEARCH_BASE_URL}/v1/customers"
+    body: dict[str, Any] = {"pagination": {"size": page_size, "from": 0}}
+    if keyword:
+        body["keyword"] = keyword
+    if search_values:
+        body["searchValues"] = search_values
+    with httpx.Client(timeout=60.0) as client:
+        response = client.post(url, headers=auth_headers(), json=body)
+        response.raise_for_status()
+        return response.json()
+
+
+def search_orders(
+    *,
+    keyword: str | None = None,
+    search_values: str | None = None,
+    page_size: int = 25,
+) -> dict[str, Any]:
+    """POST /v1/orders — axs-apex-search Orders (TestRail C66084315+)."""
+    if use_mock_api():
+        return {**MOCK_ORDERS_RESPONSE, "_openapi": APEX_SEARCH_SWAGGER_URL, "_query": keyword or search_values}
+
+    url = f"{APEX_SEARCH_BASE_URL}/v1/orders"
+    body: dict[str, Any] = {"pagination": {"size": page_size, "from": 0}}
+    if keyword:
+        body["keyword"] = keyword
+    if search_values:
+        body["searchValues"] = search_values
+    with httpx.Client(timeout=60.0) as client:
+        response = client.post(url, headers=auth_headers(), json=body)
+        response.raise_for_status()
+        return response.json()
+
+
+def search_order_payment_statuses(
+    *,
+    keyword: str | None = None,
+    search_values: str | None = None,
+) -> dict[str, Any]:
+    """POST /v1/orders/list/payment-statuses (TestRail C66084309+)."""
+    if use_mock_api():
+        return {
+            "paymentStatuses": [{"status": "Paid", "count": 1}],
+            "_mock": True,
+            "_openapi": APEX_SEARCH_SWAGGER_URL,
+        }
+
+    url = f"{APEX_SEARCH_BASE_URL}/v1/orders/list/payment-statuses"
+    body: dict[str, Any] = {}
+    if keyword:
+        body["keyword"] = keyword
+    if search_values:
+        body["searchValues"] = search_values
     with httpx.Client(timeout=60.0) as client:
         response = client.post(url, headers=auth_headers(), json=body)
         response.raise_for_status()

@@ -1,0 +1,11 @@
+{
+  "id": "search-health",
+  "name": "Search API health",
+  "description": "Example declarative plugin — GET search swagger health (dry-run in UI).",
+  "method": "GET",
+  "url_template": "https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json",
+  "parameters": [],
+  "headers": {},
+  "response_format": "json",
+  "enabled": true
+}

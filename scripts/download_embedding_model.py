@@ -18,16 +18,15 @@ from apex_rag_demo.config import MODELS_EMBEDDINGS_DIR, SENTENCE_TRANSFORMERS_MO
 
 
 def main() -> None:
-    from sentence_transformers import SentenceTransformer
-
-    MODELS_EMBEDDINGS_DIR.mkdir(parents=True, exist_ok=True)
-    print(f"Model: {SENTENCE_TRANSFORMERS_MODEL}")
-    print(f"Cache: {MODELS_EMBEDDINGS_DIR}")
-    SentenceTransformer(
-        SENTENCE_TRANSFORMERS_MODEL,
-        cache_folder=str(MODELS_EMBEDDINGS_DIR),
+    from apex_rag_demo.download_models import (
+        download_embedding_model,
+        download_rerank_model,
+        warm_intent_router,
     )
-    print("Download complete.")
+
+    download_embedding_model()
+    download_rerank_model()
+    warm_intent_router()
 
 
 if __name__ == "__main__":

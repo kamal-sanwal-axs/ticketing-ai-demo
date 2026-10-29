@@ -1,7 +1,15 @@
 .venv/
 .env
+.tmp_test_token.txt
 .cache/
+data/session_graph/
+data/chroma/
+data/neo4j/data/
+data/neo4j/logs/
+data/langgraph/
 models/embeddings/
 __pycache__/
 *.pyc
 .pytest_cache/
+frontend/node_modules/
+apex_rag_demo/web/static/dist/

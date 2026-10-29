@@ -1,0 +1,362 @@
+[
+  {
+    "id": "openapi-admin-overview",
+    "text": "APEX Admin API base https://api.apex-dev.axsdevops.io/admin. OpenAPI: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json. Demo operations: POST /v1/organizations, POST /v1/client-venues, GET /v1/organizations/{organizationId}."
+  },
+  {
+    "id": "openapi-admin-v1-client-venues",
+    "text": "APEX Admin API POST /v1/client-venues — Creates a client venue.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-client-venues-{clientVenueId}",
+    "text": "APEX Admin API PUT /v1/client-venues/{clientVenueId} — Updates a client venue profile.; GET /v1/client-venues/{clientVenueId} — Gets a client venue.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-client-venues-{clientVenueId}-access-control",
+    "text": "APEX Admin API GET /v1/client-venues/{clientVenueId}/access-control — Gets client venue access control settings.; PUT /v1/client-venues/{clientVenueId}/access-control — Updates client venue access control settings.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-client-venues-{clientVenueId}-configurations",
+    "text": "APEX Admin API POST /v1/client-venues/{clientVenueId}/configurations — Creates a venue map configuration (Best Available or Pick a Seat) for a client venue.; GET /v1/client-venues/{clientVenueId}/configurations — Gets all venue map configurations for a client venue.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-client-venues-{clientVenueId}-configurations-{configurationId}",
+    "text": "APEX Admin API PUT /v1/client-venues/{clientVenueId}/configurations/{configurationId} — Updates a venue map configuration (Best Available or Pick a Seat) for a client venue.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-client-venues-{clientVenueId}-event-settings",
+    "text": "APEX Admin API GET /v1/client-venues/{clientVenueId}/event-settings — Gets client venue event settings.; PUT /v1/client-venues/{clientVenueId}/event-settings — Updates client venue event settings.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-client-venues-{clientVenueId}-sales-channels",
+    "text": "APEX Admin API GET /v1/client-venues/{clientVenueId}/sales-channels — Gets client venue sales channels with methods of payment and methods of delivery.; PUT /v1/client-venues/{clientVenueId}/sales-channels — Updates client venue sales channels with methods of payment and methods of delivery.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-clients",
+    "text": "APEX Admin API POST /v1/clients — Creates client.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-clients-{clientId}",
+    "text": "APEX Admin API GET /v1/clients/{clientId} — Gets client by id.; PATCH /v1/clients/{clientId} — Updates client.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-clients-{clientId}-client-venues",
+    "text": "APEX Admin API GET /v1/clients/{clientId}/client-venues — Gets client venues for a client.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-clients-{clientId}-event-settings",
+    "text": "APEX Admin API GET /v1/clients/{clientId}/event-settings — Gets client event settings.; PUT /v1/clients/{clientId}/event-settings — Updates client event settings.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-clients-{clientId}-print-templates",
+    "text": "APEX Admin API GET /v1/clients/{clientId}/print-templates — Gets client print templates.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-clients-{clientId}-sales-channels",
+    "text": "APEX Admin API GET /v1/clients/{clientId}/sales-channels — Gets client sales channels with methods of payment and methods of delivery.; PUT /v1/clients/{clientId}/sales-channels — Updates client sales channels, methods of payment, and methods of delivery.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-images",
+    "text": "APEX Admin API DELETE /v1/images — Deletes images if they exist.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-images-presigned-urls",
+    "text": "APEX Admin API POST /v1/images/presigned-urls — Creates presigned upload URLs for the images.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-mmc-maps",
+    "text": "APEX Admin API GET /v1/mmc-maps — Gets MMC maps available for the Pick a Seat configuration.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-organizations",
+    "text": "APEX Admin API POST /v1/organizations — Creates an organization.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-organizations-contractuals-{organizationId}-client-venues",
+    "text": "APEX Admin API GET /v1/organizations/contractuals/{organizationId}/client-venues — Gets client venues for a contractual organization.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-organizations-contractuals-{organizationId}-clients",
+    "text": "APEX Admin API GET /v1/organizations/contractuals/{organizationId}/clients — Gets clients for a contractual organization.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-organizations-principal",
+    "text": "APEX Admin API GET /v1/organizations/principal — Gets principal organizations.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-organizations-principal-statistics",
+    "text": "APEX Admin API GET /v1/organizations/principal/statistics — Gets principal organizations statistics.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-organizations-principals-{organizationId}-clients-statistics",
+    "text": "APEX Admin API GET /v1/organizations/principals/{organizationId}/clients/statistics — Returns clients with aggregated statistics for a principal organization.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-organizations-principals-{organizationId}-contractuals-statistics",
+    "text": "APEX Admin API GET /v1/organizations/principals/{organizationId}/contractuals/statistics — Gets the contractual organizations and their aggregated stats for a principal organization.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-organizations-principals-{organizationId}-tree",
+    "text": "APEX Admin API GET /v1/organizations/principals/{organizationId}/tree — Returns the organization hierarchy tree for a principal organization.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-organizations-principals-{organizationId}-venues-statistics",
+    "text": "APEX Admin API GET /v1/organizations/principals/{organizationId}/venues/statistics — Returns venues with aggregated statistics for a principal organization.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-organizations-{organizationId}",
+    "text": "APEX Admin API GET /v1/organizations/{organizationId} — Gets organization by id.; PATCH /v1/organizations/{organizationId} — Updates organization.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-organizations-{organizationId}-validate",
+    "text": "APEX Admin API PATCH /v1/organizations/{organizationId}/validate — Validates organization update.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-roles",
+    "text": "APEX Admin API GET /v1/roles — Gets roles.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-users-me-workflows",
+    "text": "APEX Admin API GET /v1/users/me/workflows — Gets workflows available for the current user.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-admin-v1-users-{userId}-assignments",
+    "text": "APEX Admin API GET /v1/users/{userId}/assignments — Gets direct role assignments for a user and the related hierarchy nodes.. Base: https://api.apex-dev.axsdevops.io/admin. Spec: https://api.apex-dev.axsdevops.io/admin/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-search-overview",
+    "text": "APEX Search API base https://api.apex-dev.axsdevops.io/search. OpenAPI: https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json. Demo operations: POST /v1/events/suggest, POST /v1/events, POST /v1/client-venues."
+  },
+  {
+    "id": "openapi-search-v1-audits",
+    "text": "APEX Search API POST /v1/audits — Search audit events. Matching events include optional action, actionCategory, and groupId when those fields are present . Base: https://api.apex-dev.axsdevops.io/search. Spec: https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-search-v1-client-venues",
+    "text": "APEX Search API POST /v1/client-venues — The POST request for searching client venues.. Base: https://api.apex-dev.axsdevops.io/search. Spec: https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-search-v1-client-venues-{clientVenueId}",
+    "text": "APEX Search API GET /v1/client-venues/{clientVenueId} — The GET request for reading a single client venue by its identifier.. Base: https://api.apex-dev.axsdevops.io/search. Spec: https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-search-v1-customers",
+    "text": "APEX Search API POST /v1/customers — This POST function delegates customers search request to Unified API Search.. Base: https://api.apex-dev.axsdevops.io/search. Spec: https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-search-v1-customers-list-contexts",
+    "text": "APEX Search API POST /v1/customers/list/contexts — This POST function delegates customers contexts lookup request to Unified API Search.. Base: https://api.apex-dev.axsdevops.io/search. Spec: https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-search-v1-events",
+    "text": "APEX Search API POST /v1/events — The POST request for searching Events.. Base: https://api.apex-dev.axsdevops.io/search. Spec: https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-search-v1-events-list-event-statuses",
+    "text": "APEX Search API POST /v1/events/list/event-statuses — This POST function tries to asynchronously execute events search query\naccording to the request filters and client Ids t. Base: https://api.apex-dev.axsdevops.io/search. Spec: https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-search-v1-events-list-venues",
+    "text": "APEX Search API POST /v1/events/list/venues — This POST function tries to asynchronously execute events search query\naccording to the request filters and client Ids t. Base: https://api.apex-dev.axsdevops.io/search. Spec: https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-search-v1-events-suggest",
+    "text": "APEX Search API POST /v1/events/suggest — The POST request for Events' Suggestions.. Base: https://api.apex-dev.axsdevops.io/search. Spec: https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-search-v1-orders",
+    "text": "APEX Search API POST /v1/orders — This POST function delegates orders search request to Unified API Search.. Base: https://api.apex-dev.axsdevops.io/search. Spec: https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-search-v1-orders-list-payment-statuses",
+    "text": "APEX Search API POST /v1/orders/list/payment-statuses — This POST function delegates orders payment statuses lookup request to Unified API Search.. Base: https://api.apex-dev.axsdevops.io/search. Spec: https://api.apex-dev.axsdevops.io/search/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-events-overview",
+    "text": "APEX Events API base https://api.apex-dev.axsdevops.io/events. OpenAPI: https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json. Demo operations: POST / (CreateEventRequest), GET /{eventId}, POST /{eventId}/publish."
+  },
+  {
+    "id": "openapi-events-",
+    "text": "APEX Events API POST / — Creates a new event based on the provided request.; GET / — Retrieves a list of events based on the provided request.. Base: https://api.apex-dev.axsdevops.io/events. Spec: https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-events-age-requirements",
+    "text": "APEX Events API GET /age-requirements — Retrieves age requirements.. Base: https://api.apex-dev.axsdevops.io/events. Spec: https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-events-genres",
+    "text": "APEX Events API GET /genres — Retrieves genres.. Base: https://api.apex-dev.axsdevops.io/events. Spec: https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-events-image-types",
+    "text": "APEX Events API GET /image-types — Retrieves a list of all available image types.. Base: https://api.apex-dev.axsdevops.io/events. Spec: https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-events-images-presigned-urls",
+    "text": "APEX Events API POST /images/presigned-urls — Generates presigned URLs for uploading images.. Base: https://api.apex-dev.axsdevops.io/events. Spec: https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-events-performers",
+    "text": "APEX Events API GET /performers — Retrieves performers.. Base: https://api.apex-dev.axsdevops.io/events. Spec: https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-events-{eventId}",
+    "text": "APEX Events API PUT /{eventId} — Updates an existing event based on the provided request.; GET /{eventId} — Retrieves a specific event based on the provided event identifier.; DELETE /{eventId} — Deletes a specific event by its unique identifier.. Base: https://api.apex-dev.axsdevops.io/events. Spec: https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-events-{eventId}-cancel",
+    "text": "APEX Events API POST /{eventId}/cancel — Cancels a specific event by its unique identifier.. Base: https://api.apex-dev.axsdevops.io/events. Spec: https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-events-{eventId}-integration",
+    "text": "APEX Events API GET /{eventId}/integration — Retrieves v2 to v1 integration mapping for the specified event.. Base: https://api.apex-dev.axsdevops.io/events. Spec: https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-events-{eventId}-publish",
+    "text": "APEX Events API POST /{eventId}/publish — Publishes a specific event by its unique identifier.. Base: https://api.apex-dev.axsdevops.io/events. Spec: https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-events-{eventId}-settings",
+    "text": "APEX Events API GET /{eventId}/settings — Retrieves settings for the specified event.; PUT /{eventId}/settings — Replaces settings for the specified event.. Base: https://api.apex-dev.axsdevops.io/events. Spec: https://api.apex-dev.axsdevops.io/events/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-inventory-overview",
+    "text": "APEX Inventory API base https://api.apex-dev.axsdevops.io/inventory. OpenAPI: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json. Demo operations: GET /events/{eventId}/zones/primary, GET /events/{eventId}/zones/statistics, GET /zones/{zoneId}."
+  },
+  {
+    "id": "openapi-inventory-addon-categories",
+    "text": "APEX Inventory API GET /addon/categories — Returns allowed add-on categories with configured default image URLs.. Base: https://api.apex-dev.axsdevops.io/inventory. Spec: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-inventory-events-{eventId}-addons",
+    "text": "APEX Inventory API GET /events/{eventId}/addons — Returns add-ons for the specified event.. Base: https://api.apex-dev.axsdevops.io/inventory. Spec: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-inventory-events-{eventId}-zones-primary",
+    "text": "APEX Inventory API GET /events/{eventId}/zones/primary — Retrieves the primary zone details for the specified event.. Base: https://api.apex-dev.axsdevops.io/inventory. Spec: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-inventory-events-{eventId}-zones-publish-data",
+    "text": "APEX Inventory API GET /events/{eventId}/zones/publish-data — Returns Zones' data for the specified Event for publishing purposes.\nWhen clientVenueId is provided, each offer includes. Base: https://api.apex-dev.axsdevops.io/inventory. Spec: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-inventory-events-{eventId}-zones-statistics",
+    "text": "APEX Inventory API GET /events/{eventId}/zones/statistics — Returns zone statistics for the specified event.. Base: https://api.apex-dev.axsdevops.io/inventory. Spec: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-inventory-images-presigned-url",
+    "text": "APEX Inventory API POST /images/presigned-url — Creates presigned image upload URL.. Base: https://api.apex-dev.axsdevops.io/inventory. Spec: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-inventory-ticket-type-categories",
+    "text": "APEX Inventory API GET /ticket-type/categories — Returns allowed ticket type categories.. Base: https://api.apex-dev.axsdevops.io/inventory. Spec: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-inventory-zones",
+    "text": "APEX Inventory API POST /zones — Adds a zone with sections and returns the created zone resource.. Base: https://api.apex-dev.axsdevops.io/inventory. Spec: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-inventory-zones-{zoneId}",
+    "text": "APEX Inventory API GET /zones/{zoneId} — Returns zone details for the specified event and zone identifier.. Base: https://api.apex-dev.axsdevops.io/inventory. Spec: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-inventory-zones-{zoneId}-addons",
+    "text": "APEX Inventory API GET /zones/{zoneId}/addons — Returns add-ons for the specified zone.; POST /zones/{zoneId}/addons — Saves add-ons for the specified zone. Creates, updates, or deletes add-ons.. Base: https://api.apex-dev.axsdevops.io/inventory. Spec: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-inventory-zones-{zoneId}-manifest-general-admission",
+    "text": "APEX Inventory API GET /zones/{zoneId}/manifest/general-admission — Returns general admission manifest status codes and quantity grid for the specified zone.; POST /zones/{zoneId}/manifest/general-admission — Saves general admission manifest status codes and quantity grid for the specified zone.. Base: https://api.apex-dev.axsdevops.io/inventory. Spec: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-inventory-zones-{zoneId}-publish-status",
+    "text": "APEX Inventory API PATCH /zones/{zoneId}/publish-status — Updates publish lifecycle state for the specified zone.. Base: https://api.apex-dev.axsdevops.io/inventory. Spec: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-inventory-zones-{zoneId}-ticket-types",
+    "text": "APEX Inventory API GET /zones/{zoneId}/ticket-types — Returns ticket types for the specified zone.; POST /zones/{zoneId}/ticket-types — Saves ticket types for the specified zone. Creates, updates, or deletes ticket types.; PUT /zones/{zoneId}/ticket-types — Updates editable fields on existing ticket types for the specified zone.. Base: https://api.apex-dev.axsdevops.io/inventory. Spec: https://api.apex-dev.axsdevops.io/inventory/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-marketing-overview",
+    "text": "APEX Marketing API base https://api.apex-dev.axsdevops.io/marketing. OpenAPI: https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json. Demo operations: GET /v1/events, GET /v1/events/filtered-search, GET /v1/events/{eventId}/pixels."
+  },
+  {
+    "id": "openapi-marketing-v1-events",
+    "text": "APEX Marketing API GET /v1/events — Asynchronously retrieves a events collection for specific user.. Base: https://api.apex-dev.axsdevops.io/marketing. Spec: https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-marketing-v1-events-filtered-search",
+    "text": "APEX Marketing API GET /v1/events/filtered-search — Asynchronously retrieves a filtered event collection.. Base: https://api.apex-dev.axsdevops.io/marketing. Spec: https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-marketing-v1-events-{eventId}-pixels",
+    "text": "APEX Marketing API GET /v1/events/{eventId}/pixels — Returns pixels for an event.; POST /v1/events/{eventId}/pixels — Requests pixel creation and returns the new pixel identifier.. Base: https://api.apex-dev.axsdevops.io/marketing. Spec: https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-marketing-v1-events-{eventId}-pixels-{pixelId}",
+    "text": "APEX Marketing API PUT /v1/events/{eventId}/pixels/{pixelId} — Requests pixel update.; DELETE /v1/events/{eventId}/pixels/{pixelId} — Deletes a pixel for an event.. Base: https://api.apex-dev.axsdevops.io/marketing. Spec: https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-marketing-v1-pixels-locations",
+    "text": "APEX Marketing API GET /v1/pixels/locations — Asynchronously retrieves a pixel location collection.. Base: https://api.apex-dev.axsdevops.io/marketing. Spec: https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-marketing-v1-pixels-statuses",
+    "text": "APEX Marketing API GET /v1/pixels/statuses — Asynchronously retrieves a pixel statuses collection.. Base: https://api.apex-dev.axsdevops.io/marketing. Spec: https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-marketing-v1-pixels-statuses-stream",
+    "text": "APEX Marketing API GET /v1/pixels/statuses/stream — Opens a Server-Sent Events stream of pixel status changes for a session.. Base: https://api.apex-dev.axsdevops.io/marketing. Spec: https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-marketing-v1-pixels-statuses-stream-sessions",
+    "text": "APEX Marketing API POST /v1/pixels/statuses/stream/sessions — Creates a stream session for live pixel status updates (SSE).. Base: https://api.apex-dev.axsdevops.io/marketing. Spec: https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-marketing-v1-pixels-types",
+    "text": "APEX Marketing API GET /v1/pixels/types — Asynchronously retrieves a pixel types collection.. Base: https://api.apex-dev.axsdevops.io/marketing. Spec: https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-marketing-v1-pixels-types-unsupported-request",
+    "text": "APEX Marketing API GET /v1/pixels/types/unsupported-request — Asynchronously retrieves an email template to request unsupported pixel.. Base: https://api.apex-dev.axsdevops.io/marketing. Spec: https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-marketing-v1-pixels-types-{pixelTypeId}-image",
+    "text": "APEX Marketing API GET /v1/pixels/types/{pixelTypeId}/image — Asynchronously retrieves binary image data for a pixel type.. Base: https://api.apex-dev.axsdevops.io/marketing. Spec: https://api.apex-dev.axsdevops.io/marketing/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-manifest-overview",
+    "text": "APEX Manifest API base https://api.apex-dev.axsdevops.io/manifest. OpenAPI: https://api.apex-dev.axsdevops.io/manifest/swagger/v1/swagger.json. Demo operations: GET /venue-configs/{venueConfigId}."
+  },
+  {
+    "id": "openapi-manifest-venue-configs-{venueConfigId}",
+    "text": "APEX Manifest API GET /venue-configs/{venueConfigId} — Returns the venue configuration for the specified venue configuration identifier.. Base: https://api.apex-dev.axsdevops.io/manifest. Spec: https://api.apex-dev.axsdevops.io/manifest/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-reports-overview",
+    "text": "AXS B2B Reports API base https://api.apex-dev.axsdevops.io/reports. OpenAPI: https://api.apex-dev.axsdevops.io/reports/swagger/v1/swagger.json. Demo operations: PUT /v1/Sales/event, PUT /v1/Sales/dateRange, PUT /v1/TicketLifeCycle/event, PUT /v1/TicketInTransfer/event, GET /v1/Inventory/contexts/{contextId}/events/{eventId}/report, GET /v1/Timezones/timezones."
+  },
+  {
+    "id": "openapi-reports-v1-Inventory-contexts-{contextId}-events-{eventId}-report",
+    "text": "AXS B2B Reports API GET /v1/Inventory/contexts/{contextId}/events/{eventId}/report — Inventory report for a context and event (axs-b2b-reports inventory tab).. Base: https://api.apex-dev.axsdevops.io/reports. Spec: https://api.apex-dev.axsdevops.io/reports/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-reports-v1-Sales-dateRange",
+    "text": "AXS B2B Reports API PUT /v1/Sales/dateRange — Flash sales report for a date range and context.. Base: https://api.apex-dev.axsdevops.io/reports. Spec: https://api.apex-dev.axsdevops.io/reports/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-reports-v1-Sales-event",
+    "text": "AXS B2B Reports API PUT /v1/Sales/event — Flash sales report for selected events (context and event ids).. Base: https://api.apex-dev.axsdevops.io/reports. Spec: https://api.apex-dev.axsdevops.io/reports/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-reports-v1-TicketInTransfer-event",
+    "text": "AXS B2B Reports API PUT /v1/TicketInTransfer/event — Tickets in transfer flash report for an event.. Base: https://api.apex-dev.axsdevops.io/reports. Spec: https://api.apex-dev.axsdevops.io/reports/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-reports-v1-TicketLifeCycle-event",
+    "text": "AXS B2B Reports API PUT /v1/TicketLifeCycle/event — Ticket lifecycle flash report for an event.. Base: https://api.apex-dev.axsdevops.io/reports. Spec: https://api.apex-dev.axsdevops.io/reports/swagger/v1/swagger.json"
+  },
+  {
+    "id": "openapi-reports-v1-Timezones-timezones",
+    "text": "AXS B2B Reports API GET /v1/Timezones/timezones — List timezones available for flash reports.. Base: https://api.apex-dev.axsdevops.io/reports. Spec: https://api.apex-dev.axsdevops.io/reports/swagger/v1/swagger.json"
+  }
+]

@@ -19,17 +19,45 @@ from apex_rag_demo.intent_helpers import (
     looks_like_event_search,
     mentions_event_keyword,
     wants_list_client_venues,
+    wants_list_users,
 )
+from apex_rag_demo.crud_planners import plan_for_crud_intent
+from apex_rag_demo.event_query_helpers import get_event_enrichment_flags, looks_like_event_inventory_followup
+from apex_rag_demo.mutation_intent_helpers import looks_like_publish_event_request
+from apex_rag_demo.crud_policy import write_kind_for_intent, WriteKind
+from apex_rag_demo.crud_registry import match_mutation_intent
 from apex_rag_demo.response_formatters import strip_ui_region
 
 INTENTS = (
     "search_events",
+    "search_orders",
+    "search_order_payment_statuses",
+    "search_customers",
     "list_client_venues",
+    "list_users",
     "create_organization",
     "create_client_venue",
     "get_event",
+    "update_event",
+    "delete_event",
+    "create_event",
+    "publish_event",
+    "update_organization",
+    "update_client_venue",
+    "create_inventory_zone",
+    "reset_inventory_publish",
+    "update_inventory_ticket_types",
+    "update_inventory_ga_manifest",
+    "list_marketing_pixels",
+    "create_marketing_pixel",
+    "update_marketing_pixel",
+    "delete_marketing_pixel",
     "inventory_zones",
     "marketing_events",
+    "get_venue_config",
+    "b2b_flash_report",
+    "reports_inventory_event",
+    "reports_timezones",
     "explain",
 )
 
@@ -39,13 +67,18 @@ _UUID_RE = re.compile(
 
 _CLASSIFY_SYSTEM = """Classify the user message into exactly one intent.
 Reply with only one token from this list:
-search_events | list_client_venues | create_organization | create_client_venue | get_event | inventory_zones | marketing_events | explain
+search_events | search_orders | search_order_payment_statuses | list_client_venues | list_users | create_organization | create_client_venue | get_event | update_event | inventory_zones | marketing_events | explain
 
 search_events = find or search events (search-api)
+search_orders = search fan orders (search-api POST /v1/orders) — axs-apex-search Orders
+search_order_payment_statuses = order payment status lookup (search-api POST /v1/orders/list/payment-statuses)
+search_customers = search fan customers (search-api POST /v1/customers) — axs-apex-search Customers
 list_client_venues = list or show all client venues (search-api POST /v1/client-venues)
+list_users = B2B user directory (resources-api GET /v1/Users) — same as Admin UI user list
 create_organization = create a new organization (admin-api)
 create_client_venue = create a new client venue (admin-api)
 get_event = get event details by event id (events-api)
+update_event = change event title/headliners (events-api PUT) — requires event UUID and new name
 inventory_zones = zones or inventory for an event (inventory-api)
 marketing_events = list or browse events (marketing-api GET /v1/events) — published/live/all events, date-style asks
 explain = off-topic (weather, jokes), bot identity, how something works, or general APEX help
@@ -77,95 +110,20 @@ def _extract_search_query_heuristic(question: str) -> str | None:
     return query if len(query) >= 2 else None
 
 
-def classify_intent(question: str) -> str:
-    q = question.lower()
-    bare = strip_ui_region(question)
-    bare_lower = bare.lower()
+def classify_intent(
+    question: str,
+    *,
+    session_focus: dict[str, Any] | None = None,
+    session_snippets: list[str] | None = None,
+) -> str:
+    from apex_rag_demo.agent_classify import classify_with_routing
 
-    if is_off_topic(bare):
-        return "explain"
-
-    if is_general_help_question(bare):
-        return "explain"
-
-    if is_greeting(bare):
-        return "explain"
-
-    if is_assistant_meta_question(bare):
-        return "explain"
-
-    bare_stripped = bare_lower.strip().rstrip(".!?")
-    if looks_like_list_events(bare) or (
-        is_events_not_venues_request(bare) and bare_stripped in ("all events", "events", "event")
-    ):
-        return "marketing_events"
-
-    if wants_list_client_venues(bare):
-        return "list_client_venues"
-
-    if looks_like_named_event_search(bare):
-        return "search_events"
-
-    if looks_like_event_search(bare):
-        return "marketing_events" if is_weak_suggest_query(extract_event_search_query(bare)) else "search_events"
-
-    if any(w in q for w in ("how does", "how do i", "what is", "explain", "help me understand")):
-        action_phrases = (
-            "create ",
-            "list all",
-            "list client",
-            "search events",
-            "find events",
-            "get event",
-            "inventory zone",
-            "marketing events",
-            "client venue",
-            "organization",
-        )
-        if not any(p in q for p in action_phrases):
-            return "explain"
-
-    if any(w in q for w in ("create org", "new organization", "create organization")):
-        return "create_organization"
-
-    if wants_list_client_venues(bare):
-        return "list_client_venues"
-
-    if "create" in q and any(w in q for w in ("venue", "client venue", "arena")):
-        return "create_client_venue"
-
-    if _UUID_RE.search(question):
-        if any(w in q for w in ("zone", "inventory", "ticket type", "primary zone")):
-            return "inventory_zones"
-        if any(w in q for w in ("event", "detail", "status", "publish")):
-            return "get_event"
-        if "inventory" in q or "zones" in q:
-            return "inventory_zones"
-        return "get_event"
-
-    if any(w in q for w in ("marketing event", "marketing list", "pixel")):
-        return "marketing_events"
-    if "list" in q and "marketing" in q:
-        return "marketing_events"
-    if bare in ("list marketing events", "marketing events"):
-        return "marketing_events"
-
-    if any(w in q for w in ("search", "find", "lookup", "matching", "suggest")) and mentions_event_keyword(
-        bare_lower,
-    ):
-        return "search_events"
-    if mentions_event_keyword(bare_lower) and "venue" not in bare_lower and "client" not in bare_lower:
-        if any(w in q for w in ("search", "find", "look")):
-            return "search_events"
-
-    if is_events_not_venues_request(bare) and not wants_list_client_venues(bare):
-        return "marketing_events"
-
-    raw = chat_completion(_CLASSIFY_SYSTEM, bare, temperature=0.0).strip().lower()
-    for intent in INTENTS:
-        if intent in raw:
-            return guard_api_intent(intent, question)
-    return "explain"
+    intent, _ = classify_with_routing(
+        question,
+        session_focus=session_focus,
+        session_snippets=session_snippets,
+    )
+    return intent
 
 
 _PLAN_ORG_SYSTEM = """Extract fields for POST /v1/organizations (apex-admin-api).
@@ -189,47 +147,50 @@ def _extract_event_id(question: str) -> str | None:
     return match.group(0) if match else None
 
 
-def plan_for_intent(intent: str, question: str) -> dict[str, Any]:
-    if intent == "search_events":
-        heuristic = _extract_search_query_heuristic(question)
-        if heuristic and len(heuristic) >= 2:
-            return {"query": heuristic}
-        raw = chat_completion(_PLAN_SEARCH_SYSTEM, strip_ui_region(question), temperature=0.0)
-        try:
-            data = _parse_json_object(raw)
-            query = str(data.get("query", "")).strip()
-        except json.JSONDecodeError:
-            query = strip_ui_region(question)[:80]
-        if len(query) < 2:
-            query = strip_ui_region(question)[:80]
-        return {"query": query}
+def _extract_admin_user_id(question: str) -> str | None:
+    if _UUID_RE.search(question):
+        return None
+    match = re.search(
+        r"\b(?:user\s+)?(?:id\s+)?(\d{4,})\b",
+        strip_ui_region(question),
+        re.I,
+    )
+    return match.group(1) if match else None
 
-    if intent == "create_organization":
-        raw = chat_completion(_PLAN_ORG_SYSTEM, strip_ui_region(question), temperature=0.0)
-        try:
-            return _parse_json_object(raw)
-        except json.JSONDecodeError:
-            return {"name": strip_ui_region(question)[:120] or "Demo Organization"}
 
-    if intent == "create_client_venue":
-        raw = chat_completion(_PLAN_VENUE_SYSTEM, strip_ui_region(question), temperature=0.0)
-        try:
-            return _parse_json_object(raw)
-        except json.JSONDecodeError:
-            return {"name": strip_ui_region(question)[:120] or "Demo Client Venue"}
+def _extract_user_directory_search(question: str) -> str | None:
+    bare = strip_ui_region(question)
+    for pattern in (
+        r"\busers?\s+(?:matching|named|like|containing)\s+(.+?)\s*$",
+        r"\bsearch\s+users?\s+(?:for\s+)?(.+?)\s*$",
+    ):
+        match = re.search(pattern, bare, re.I)
+        if match:
+            text = match.group(1).strip().rstrip(".!?")
+            if len(text) >= 2:
+                return text
+    return None
 
-    if intent in ("get_event", "inventory_zones"):
-        event_id = _extract_event_id(question)
-        return {"eventId": event_id or ""}
 
-    if intent == "marketing_events":
-        return {}
+def plan_for_intent(
+    intent: str,
+    question: str,
+    session_focus: dict[str, Any] | None = None,
+    *,
+    chroma_system_context: str | None = None,
+    semantic_context_block: str | None = None,
+    chat_history: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    from apex_rag_demo.agent_plan import plan_for_intent_agentic
 
-    if intent == "list_client_venues":
-        org_ids = [m.group(0) for m in _UUID_RE.finditer(question)]
-        return {
-            "pageSize": 25,
-            "organizationIds": org_ids[:5],
-        }
+    plan = plan_for_intent_agentic(
+        intent,
+        question,
+        session_focus,
+        chroma_system_context=chroma_system_context,
+        semantic_context_block=semantic_context_block,
+        chat_history=chat_history,
+    )
+    from apex_rag_demo.capability_routing import enrich_read_plan_from_question
 
-    return {}
+    return enrich_read_plan_from_question(intent, plan, question)

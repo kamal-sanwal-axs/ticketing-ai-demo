@@ -1,0 +1,101 @@
+[
+  {
+    "id": "search-customers-email",
+    "prompt": "search customers for kamal@example.com",
+    "expected_intent": "search_customers",
+    "mfe": "axs-apex-search"
+  },
+  {
+    "id": "search-customers-name",
+    "prompt": "show me customers named Kamal",
+    "expected_intent": "search_customers",
+    "mfe": "axs-apex-search"
+  },
+  {
+    "id": "search-orders-customer",
+    "prompt": "search orders for customer kamal@example.com",
+    "expected_intent": "search_orders",
+    "mfe": "axs-apex-search"
+  },
+  {
+    "id": "search-events",
+    "prompt": "search events matching lakers",
+    "expected_intent": "search_events",
+    "mfe": "axs-apex-search"
+  },
+  {
+    "id": "marketing-events",
+    "prompt": "show all events",
+    "expected_intent": "marketing_events",
+    "mfe": "axs-apex-marketing"
+  },
+  {
+    "id": "marketing-upcoming",
+    "prompt": "show upcoming events",
+    "expected_intent": "marketing_events",
+    "mfe": "axs-apex-home"
+  },
+  {
+    "id": "list-venues",
+    "prompt": "list all client venues",
+    "expected_intent": "list_client_venues",
+    "mfe": "axs-apex-admin"
+  },
+  {
+    "id": "inventory-zones",
+    "prompt": "inventory zones for event 8f0a2f5c-9f45-4a7e-93f2-2f6a3f1f2b10",
+    "expected_intent": "inventory_zones",
+    "mfe": "axs-apex-inventory"
+  },
+  {
+    "id": "best-available-event",
+    "prompt": "show best available for event 8f0a2f5c-9f45-4a7e-93f2-2f6a3f1f2b10",
+    "expected_intent": "inventory_zones",
+    "mfe": "axs-apex-inventory"
+  },
+  {
+    "id": "best-available-customer",
+    "prompt": "show best available for customer Kamal",
+    "expected_intent": "search_customers",
+    "mfe": "axs-apex-search",
+    "note": "Resolve fan first; inventory BA needs event context in follow-up."
+  },
+  {
+    "id": "fans-inventory",
+    "prompt": "show fans with inventory holds",
+    "expected_intent": "search_customers",
+    "mfe": "axs-apex-search"
+  },
+  {
+    "id": "get-event",
+    "prompt": "get event 8f0a2f5c-9f45-4a7e-93f2-2f6a3f1f2b10 with inventory",
+    "expected_intent": "get_event",
+    "mfe": "axs-apex-events"
+  },
+  {
+    "id": "publish-event",
+    "prompt": "publish event 8f0a2f5c-9f45-4a7e-93f2-2f6a3f1f2b10",
+    "expected_intent": "publish_event",
+    "mfe": "axs-apex-events"
+  },
+  {
+    "id": "list-users",
+    "prompt": "list users",
+    "expected_intent": "list_users",
+    "mfe": "axs-apex-admin"
+  },
+  {
+    "id": "compound-published-inventory",
+    "prompt": "show me published events so I can see seat sold price code and ticket type",
+    "expected_intent": "marketing_events",
+    "mfe": "axs-apex-marketing",
+    "note": "Orchestrator chains get_event+inventory for first events."
+  },
+  {
+    "id": "fan-buy-seat",
+    "prompt": "buy one seat for this event",
+    "expected_intent": "explain",
+    "mfe": "axs-apex-events",
+    "anti_hallucination": true
+  }
+]

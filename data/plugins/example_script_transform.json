@@ -1,0 +1,13 @@
+{
+  "kind": "script",
+  "id": "greet-transform",
+  "name": "Greet transform",
+  "description": "Example JavaScript handler — runs in QuickJS sandbox (no network).",
+  "language": "javascript",
+  "entry_function": "handler",
+  "source": "function handler(input) {\n  const name = (input && input.name) ? String(input.name) : 'operator';\n  return { message: 'Hello, ' + name + '!', at: new Date().toISOString() };\n}\n",
+  "parameters": [
+    { "name": "name", "type": "string", "required": false, "description": "Display name" }
+  ],
+  "enabled": true
+}

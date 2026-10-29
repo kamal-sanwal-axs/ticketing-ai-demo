@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import argparse
 
+from apex_rag_demo.rag._deps_check import require_rag_cli_deps
+
+require_rag_cli_deps(chroma=True)
+
 from apex_rag_demo.config import RAG_VECTOR_STORE
 from apex_rag_demo.rag.chroma_store import ensure_collection_synced, get_client
 from apex_rag_demo.rag.index import build_or_load_index
@@ -24,6 +28,13 @@ def main() -> None:
         client = get_client()
         collection = ensure_collection_synced(client)
         print(f"Chroma collection '{collection.name}' synced ({collection.count()} chunks).")
+        try:
+            from apex_rag_demo.rag.intent_chroma import sync_intent_routes_collection
+
+            n = sync_intent_routes_collection()
+            print(f"Chroma intent routes synced ({n} operator prompts).")
+        except Exception as exc:
+            print(f"Intent routes sync skipped: {exc}")
         return
 
     chunks, matrix = build_or_load_index()

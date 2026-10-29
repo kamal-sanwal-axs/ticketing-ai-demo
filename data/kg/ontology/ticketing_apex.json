@@ -1,0 +1,131 @@
+{
+  "version": "1.0",
+  "domain": "apex_ticketing_operations",
+  "description": "Shared contract for GLiNER / NER extraction and Neo4j storage. Only listed entity and relation types may be written to the graph.",
+  "entity_types": [
+    {
+      "name": "Event",
+      "description": "A ticketed occurrence (concerts, sports, etc.) managed in events-api.",
+      "identifiers": ["eventId", "uuid"],
+      "attributes": ["name", "lifecycleState", "startDate", "endDate", "clientVenueId"]
+    },
+    {
+      "name": "Organization",
+      "description": "Client or promoter org in admin hierarchy.",
+      "identifiers": ["organizationId", "clientId"],
+      "attributes": ["name", "region"]
+    },
+    {
+      "name": "ClientVenue",
+      "description": "Venue instance under a client.",
+      "identifiers": ["clientVenueId"],
+      "attributes": ["name", "city", "timezone"]
+    },
+    {
+      "name": "InventoryZone",
+      "description": "Admissions or other zone from inventory-api.",
+      "identifiers": ["zoneId"],
+      "attributes": ["description", "zoneType", "venueCapacity"]
+    },
+    {
+      "name": "PriceLevel",
+      "description": "Named price tier within a zone.",
+      "identifiers": ["priceLevelId"],
+      "attributes": ["description", "color"]
+    },
+    {
+      "name": "PriceCode",
+      "description": "Sellable price code on publish-data.",
+      "identifiers": ["priceCodeId"],
+      "attributes": ["description", "pricingMode", "type"]
+    },
+    {
+      "name": "TicketType",
+      "description": "Ticket type configuration on a zone.",
+      "identifiers": ["ticketTypeId"],
+      "attributes": ["name", "category", "minQty", "maxQty"]
+    },
+    {
+      "name": "ApiEndpoint",
+      "description": "Documented REST path from OpenAPI / KB chunks.",
+      "identifiers": ["method", "path"],
+      "attributes": ["service", "summary"]
+    },
+    {
+      "name": "DocumentChunk",
+      "description": "Source text span synced from kb.json or operator transcripts.",
+      "identifiers": ["chunkId", "sourceDocId"],
+      "attributes": ["text", "source"]
+    }
+  ],
+  "relation_types": [
+    {
+      "name": "HOSTED_AT",
+      "from": "Event",
+      "to": "ClientVenue",
+      "description": "Event is hosted at this client venue."
+    },
+    {
+      "name": "OWNED_BY",
+      "from": "ClientVenue",
+      "to": "Organization",
+      "description": "Venue belongs to client org."
+    },
+    {
+      "name": "HAS_ZONE",
+      "from": "Event",
+      "to": "InventoryZone",
+      "description": "Event has inventory zone (e.g. primary admissions)."
+    },
+    {
+      "name": "HAS_PRICE_LEVEL",
+      "from": "InventoryZone",
+      "to": "PriceLevel",
+      "description": "Zone defines price levels."
+    },
+    {
+      "name": "USES_PRICE_CODE",
+      "from": "InventoryZone",
+      "to": "PriceCode",
+      "description": "Zone references price codes on publish snapshot."
+    },
+    {
+      "name": "OFFERS_TICKET_TYPE",
+      "from": "InventoryZone",
+      "to": "TicketType",
+      "description": "Zone offers ticket types."
+    },
+    {
+      "name": "MENTIONS",
+      "from": "DocumentChunk",
+      "to": "Event",
+      "description": "Chunk mentions an event (extraction candidate)."
+    },
+    {
+      "name": "DESCRIBES",
+      "from": "DocumentChunk",
+      "to": "ApiEndpoint",
+      "description": "Chunk documents an API operation."
+    },
+    {
+      "name": "SAME_AS",
+      "from": "*",
+      "to": "*",
+      "description": "Entity resolution merge edge (confidence >= threshold only)."
+    }
+  ],
+  "extraction": {
+    "gliner_label_map": {
+      "event": "Event",
+      "organization": "Organization",
+      "venue": "ClientVenue",
+      "price code": "PriceCode",
+      "price level": "PriceLevel",
+      "ticket type": "TicketType"
+    },
+    "entity_resolution": {
+      "auto_merge_threshold": 0.9,
+      "review_threshold": 0.85
+    }
+  }
+}

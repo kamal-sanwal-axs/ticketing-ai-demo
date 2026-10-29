@@ -3,14 +3,18 @@ from __future__ import annotations
 import hashlib
 import json
 
-import chromadb
-
 from apex_rag_demo.config import (
     CHROMA_COLLECTION,
-    CHROMA_HOST,
-    CHROMA_PORT,
+    EMBEDDING_EXPECTED_DIMENSION,
     KB_PATH,
 )
+from apex_rag_demo.rag.chroma_client import (
+    create_collection,
+    delete_collection,
+    get_collection,
+    get_http_client,
+)
+from apex_rag_demo.rag.chroma_metrics import chroma_collection_metadata
 from apex_rag_demo.rag.embeddings import embed_texts
 from apex_rag_demo.rag.kb import KbChunk, load_kb
 
@@ -25,17 +29,17 @@ def _kb_fingerprint(chunks: list[KbChunk]) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def get_client() -> chromadb.HttpClient:
-    return chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
+def get_client():
+    return get_http_client()
 
 
-def ensure_collection_synced(client: chromadb.HttpClient | None = None) -> chromadb.Collection:
+def ensure_collection_synced(client=None):
     client = client or get_client()
     chunks = load_kb()
     fingerprint = _kb_fingerprint(chunks)
 
     try:
-        collection = client.get_collection(name=CHROMA_COLLECTION)
+        collection = get_collection(client, CHROMA_COLLECTION)
     except Exception:
         collection = None
 
@@ -48,18 +52,30 @@ def ensure_collection_synced(client: chromadb.HttpClient | None = None) -> chrom
         return collection
 
     try:
-        client.delete_collection(CHROMA_COLLECTION)
+        delete_collection(client, CHROMA_COLLECTION)
     except Exception:
         pass
 
-    collection = client.create_collection(
-        name=CHROMA_COLLECTION,
-        metadata={
-            "description": f"KB from {KB_PATH.name}",
-            _KB_HASH_META: fingerprint,
-        },
+    collection = create_collection(
+        client,
+        CHROMA_COLLECTION,
+        metadata=chroma_collection_metadata(
+            {
+                "description": f"KB from {KB_PATH.name}",
+                _KB_HASH_META: fingerprint,
+            },
+        ),
     )
     vectors = embed_texts([c.text for c in chunks])
+    if vectors and EMBEDDING_EXPECTED_DIMENSION > 0:
+        dim = len(vectors[0])
+        if dim != EMBEDDING_EXPECTED_DIMENSION:
+            print(
+                f"--- WARNING: embedding dim {dim} != EMBEDDING_EXPECTED_DIMENSION "
+                f"{EMBEDDING_EXPECTED_DIMENSION}. Re-sync Chroma after changing "
+                f"SENTENCE_TRANSFORMERS_MODEL; chat GGUF (Qwen 3B) is unrelated. ---",
+                flush=True,
+            )
     collection.add(
         ids=[c.id for c in chunks],
         documents=[c.text for c in chunks],

@@ -6,9 +6,11 @@ from apex_rag_demo.config import (
     CACHE_DIR,
     INDEX_PATH,
     RAG_KEYWORD_FALLBACK,
+    RAG_RETRIEVE_K,
     RAG_VECTOR_STORE,
     TOP_K,
 )
+from apex_rag_demo.rag.rerank import rerank_texts
 from apex_rag_demo.rag.embeddings import embed_texts
 from apex_rag_demo.rag.kb import KbChunk, load_kb
 
@@ -61,34 +63,63 @@ def _keyword_retrieve(question: str, chunks: list[KbChunk], top_k: int) -> list[
     return [text for _, text in scored[:top_k]]
 
 
-def _retrieve_numpy(question: str, top_k: int) -> list[str]:
+def _retrieve_numpy(question: str, fetch_k: int) -> list[str]:
     chunks, matrix = build_or_load_index()
     if matrix.shape[1] == 1:
-        return _keyword_retrieve(question, chunks, top_k)
+        return _keyword_retrieve(question, chunks, fetch_k)
     q = np.array(embed_texts([question]), dtype=np.float32)
     q = _normalize(q)[0]
     scores = matrix @ q
-    order = np.argsort(-scores)[:top_k]
+    order = np.argsort(-scores)[:fetch_k]
     return [chunks[i].text for i in order]
 
 
-def retrieve(question: str, top_k: int = TOP_K) -> list[str]:
+def _log_bi_encoder_candidates(candidates: list[str]) -> None:
+    print("--- RETRIEVING DOCS (Bi-Encoder) ---", flush=True)
+    for i, doc in enumerate(candidates):
+        preview = doc.replace("\n", " ")[:120]
+        print(f"[Bi-Encoder {i + 1}] {preview}...", flush=True)
+
+
+def retrieve_bi_encoder_candidates(question: str, fetch_k: int) -> list[str]:
+    """Phase 1: vector / HNSW fetch (Chroma apex_kb or numpy), no cross-encoder."""
     if RAG_VECTOR_STORE == "chroma":
         try:
             from apex_rag_demo.rag.chroma_store import query_chroma
 
-            return query_chroma(question, top_k)
+            candidates = query_chroma(question, fetch_k)
+            _log_bi_encoder_candidates(candidates)
+            return candidates
         except Exception:
             if not RAG_KEYWORD_FALLBACK:
                 raise
             try:
-                return _retrieve_numpy(question, top_k)
+                candidates = _retrieve_numpy(question, fetch_k)
+                _log_bi_encoder_candidates(candidates)
+                return candidates
             except Exception:
-                return _keyword_retrieve(question, load_kb(), top_k)
+                candidates = _keyword_retrieve(question, load_kb(), fetch_k)
+                _log_bi_encoder_candidates(candidates)
+                return candidates
 
     try:
-        return _retrieve_numpy(question, top_k)
+        candidates = _retrieve_numpy(question, fetch_k)
+        _log_bi_encoder_candidates(candidates)
+        return candidates
     except Exception:
         if not RAG_KEYWORD_FALLBACK:
             raise
-        return _keyword_retrieve(question, load_kb(), top_k)
+        candidates = _keyword_retrieve(question, load_kb(), fetch_k)
+        _log_bi_encoder_candidates(candidates)
+        return candidates
+
+
+def rerank_retrieval_candidates(question: str, candidates: list[str], top_k: int = TOP_K) -> list[str]:
+    """Phase 2: cross-encoder rerank (sentence-transformers CrossEncoder)."""
+    return rerank_texts(question, candidates, top_k)
+
+
+def retrieve(question: str, top_k: int = TOP_K) -> list[str]:
+    fetch_k = max(top_k, RAG_RETRIEVE_K)
+    candidates = retrieve_bi_encoder_candidates(question, fetch_k)
+    return rerank_retrieval_candidates(question, candidates, top_k)

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "flow-fan-checkout-boundary",
+    "text": "Operator cannot complete fan checkout in chat. For buy/purchase seat asks: use publish_event + inventory_zones on apex-dev, then search_orders to verify sale. Never invent order ids, seat numbers, or payment results."
+  },
+  {
+    "id": "flow-search-customers",
+    "text": "Show/list/search customers or fans: search_customers — POST /search/v1/customers (axs-apex-search Customers, permission b2b_search_customers)."
+  },
+  {
+    "id": "flow-search-orders",
+    "text": "Search fan orders by email or order number: search_orders — POST /search/v1/orders (axs-apex-search Orders)."
+  },
+  {
+    "id": "flow-search-events",
+    "text": "Find events by name: search_events — POST /search/v1/events/suggest or /v1/events (axs-apex-search)."
+  },
+  {
+    "id": "flow-marketing-events",
+    "text": "List or browse events catalog / upcoming on home: marketing_events — marketing-api GET /v1/events (axs-apex-marketing, axs-apex-home upcoming list)."
+  },
+  {
+    "id": "flow-inventory-zones",
+    "text": "Inventory zones, price levels, sections, ticket types, best available on an event: inventory_zones — inventory-api for event UUID (axs-apex-inventory). Best available for a named customer requires search_customers first, then inventory on a chosen event."
+  },
+  {
+    "id": "flow-events-publish",
+    "text": "Publish event to on sale: publish_event — events-api (axs-apex-events). Prerequisite before fan purchase."
+  },
+  {
+    "id": "flow-admin-venues-orgs",
+    "text": "Client venues and organizations: list_client_venues, create_organization, create_client_venue — admin-api (axs-apex-admin)."
+  },
+  {
+    "id": "flow-admin-users",
+    "text": "B2B user directory: list_users — resources-api (axs-apex-admin accounts area)."
+  }
+]

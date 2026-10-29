@@ -63,5 +63,32 @@
       "GET /v1/events/filtered-search",
       "GET /v1/events/{eventId}/pixels"
     ]
+  },
+  {
+    "id": "manifest",
+    "name": "APEX Manifest API",
+    "base_url_env": "APEX_MANIFEST_BASE_URL",
+    "default_base_url": "https://api.apex-dev.axsdevops.io/manifest",
+    "swagger_url": "https://api.apex-dev.axsdevops.io/manifest/swagger/v1/swagger.json",
+    "swagger_ui_url": "https://api.apex-dev.axsdevops.io/manifest/swagger/index.html",
+    "demo_operations": [
+      "GET /venue-configs/{venueConfigId}"
+    ]
+  },
+  {
+    "id": "reports",
+    "name": "AXS B2B Reports API",
+    "base_url_env": "APEX_REPORTS_BASE_URL",
+    "default_base_url": "https://api.apex-dev.axsdevops.io/reports",
+    "swagger_url": "https://api.apex-dev.axsdevops.io/reports/swagger/v1/swagger.json",
+    "swagger_ui_url": "https://api.apex-dev.axsdevops.io/reports/swagger/index.html",
+    "demo_operations": [
+      "PUT /v1/Sales/event",
+      "PUT /v1/Sales/dateRange",
+      "PUT /v1/TicketLifeCycle/event",
+      "PUT /v1/TicketInTransfer/event",
+      "GET /v1/Inventory/contexts/{contextId}/events/{eventId}/report",
+      "GET /v1/Timezones/timezones"
+    ]
   }
 ]

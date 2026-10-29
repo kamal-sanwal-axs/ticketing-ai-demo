@@ -1,0 +1,117 @@
+[
+  {
+    "intent": "marketing_events",
+    "phrases": [
+      "show me events",
+      "list all events",
+      "how many events are there",
+      "show events count",
+      "count events in the catalog",
+      "show me the last 5 events",
+      "show me last 5 search results for events",
+      "show me last 5 search",
+      "recent events in marketing catalog",
+      "browse ticketed events",
+      "events on sale",
+      "published events list"
+    ]
+  },
+  {
+    "intent": "search_events",
+    "phrases": [
+      "search events matching artist name",
+      "find event by name",
+      "lookup festival in search index",
+      "typeahead search for events"
+    ]
+  },
+  {
+    "intent": "search_orders",
+    "phrases": [
+      "search orders for customer email",
+      "find order by order number",
+      "lookup fan purchase order",
+      "orders matching email address"
+    ]
+  },
+  {
+    "intent": "search_customers",
+    "phrases": [
+      "search customers for email",
+      "find fan account",
+      "lookup customer by name"
+    ]
+  },
+  {
+    "intent": "list_client_venues",
+    "phrases": [
+      "list client venues",
+      "venue registry not events",
+      "show org client venue hierarchy"
+    ]
+  },
+  {
+    "intent": "list_users",
+    "phrases": [
+      "list b2b users",
+      "admin user directory"
+    ]
+  },
+  {
+    "intent": "get_event",
+    "phrases": [
+      "get event details by uuid",
+      "single event record"
+    ]
+  },
+  {
+    "intent": "inventory_zones",
+    "phrases": [
+      "inventory zones price levels for event",
+      "primary zone sections"
+    ]
+  },
+  {
+    "intent": "b2b_flash_report",
+    "phrases": [
+      "flash sales report for context and event",
+      "b2b reports sales by event",
+      "ticket lifecycle report context event ids",
+      "tickets in transfer report",
+      "get me a report",
+      "show me reports for the event",
+      "can you show me reports for an event"
+    ]
+  },
+  {
+    "intent": "reports_inventory_event",
+    "phrases": [
+      "inventory report context event id",
+      "b2b reports inventory tab",
+      "inventory report for event"
+    ]
+  },
+  {
+    "intent": "reports_timezones",
+    "phrases": [
+      "report timezones",
+      "flash report timezone list"
+    ]
+  },
+  {
+    "intent": "get_venue_config",
+    "phrases": [
+      "venue configuration manifest api",
+      "get venue config uuid"
+    ]
+  },
+  {
+    "intent": "explain",
+    "phrases": [
+      "how does publish work",
+      "help documentation",
+      "hello",
+      "what can you do"
+    ]
+  }
+]

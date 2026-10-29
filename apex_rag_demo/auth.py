@@ -30,6 +30,27 @@ def decode_jwt_payload(token: str) -> dict[str, Any]:
         return {}
 
 
+def admin_numeric_user_id_from_claims(claims: dict[str, Any]) -> str | None:
+    """Admin assignments API uses int64 operator/user ids (JWT claim varies by tenant)."""
+    for key in (
+        "operatorId",
+        "operator_id",
+        "userId",
+        "user_id",
+        "uid",
+        "id",
+        "extension_operatorId",
+        "extension_OperatorId",
+    ):
+        raw = claims.get(key)
+        if raw is not None and str(raw).isdigit():
+            return str(raw)
+    sub = claims.get("sub")
+    if sub is not None and str(sub).isdigit():
+        return str(sub)
+    return None
+
+
 def profile_from_token(token: str, region: str) -> dict[str, Any]:
     claims = decode_jwt_payload(token)
     name = (
@@ -41,10 +62,12 @@ def profile_from_token(token: str, region: str) -> dict[str, Any]:
     )
     email = claims.get("email") or claims.get("sub") or ""
     user_id = claims.get("sub") or claims.get("user_id") or ""
+    admin_user_id = admin_numeric_user_id_from_claims(claims)
     return {
         "name": name,
         "email": email,
         "userId": user_id,
+        "adminUserId": admin_user_id,
         "region": region,
         "tenant": claims.get("tenant") or claims.get("TENANT") or "apex-dev",
     }

@@ -26,7 +26,10 @@
           <h2 id="welcome-title">Welcome</h2>
           <p id="welcome-sub" class="muted"></p>
         </div>
-        <button id="btn-logout" type="button" class="ghost">Sign out</button>
+        <div class="topbar-actions">
+          <button id="btn-new-chat" type="button" class="ghost">New chat</button>
+          <button id="btn-logout" type="button" class="ghost">Sign out</button>
+        </div>
       </header>
 
       <div class="profile">
@@ -49,11 +52,7 @@
 
       <form id="chat-form" class="chat-form">
         <input id="chat-input" type="text" placeholder="Search events, ask about venues, org setup…" autocomplete="off" />
-        <label class="checkbox">
-          <input id="execute-writes" type="checkbox" />
-          Live writes (admin create)
-        </label>
-        <button type="submit">Send</button>
+        <button id="btn-send" type="submit">Send</button>
       </form>
       </div>
     </section>
@@ -66,6 +65,6 @@
     <a href="https://apex-dev.axsdevops.io/login" target="_blank" rel="noopener">apex-dev login</a>
   </footer>
   </div>
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=6"></script>
 </body>
 </html>
