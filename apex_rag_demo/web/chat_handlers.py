@@ -46,6 +46,7 @@ def build_chat_response_dict(
     *,
     question: str,
     session_id: str,
+    region: str | None = None,
 ) -> dict:
     display = build_ui_display(state)
     pipeline_error = state.get("pipeline_error") if isinstance(state.get("pipeline_error"), dict) else None
@@ -90,4 +91,11 @@ def build_chat_response_dict(
         "error": bool(pipeline_error),
         "error_code": str(pipeline_error.get("code")) if pipeline_error else None,
         "error_message": str(pipeline_error.get("summary")) if pipeline_error else None,
+        "stack_status": _stack_status_for_ui(region),
     }
+
+
+def _stack_status_for_ui(region: str | None) -> dict:
+    from apex_rag_demo.web.ui_stack import build_ui_stack_status
+
+    return build_ui_stack_status(region=region)

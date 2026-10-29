@@ -165,6 +165,7 @@ def chat_completion(
     routing: bool = False,
 ) -> str:
     from apex_rag_demo.prompt_budget import (
+        estimate_message_tokens,
         fit_messages_to_context,
         routing_budget_kwargs,
         synthesis_budget_kwargs,
@@ -190,11 +191,19 @@ def chat_completion(
     if prior:
         messages.extend(prior)
     messages.append({"role": "user", "content": user})
-    messages, _ = fit_messages_to_context(
+    messages, trimmed = fit_messages_to_context(
         messages,
         max_tokens=budget["max_tokens"],
         max_chars_per_message=budget["max_chars_per_message"],
         routing=routing,
+    )
+    from apex_rag_demo.web.ui_stack import record_llm_context_usage
+
+    record_llm_context_usage(
+        estimated_tokens=estimate_message_tokens(messages),
+        budget_tokens=budget["max_tokens"],
+        routing=routing,
+        prompt_trimmed=trimmed,
     )
     request_body = _build_chat_payload(
         messages,

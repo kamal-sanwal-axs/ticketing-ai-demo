@@ -73,6 +73,7 @@ class ChatResponse(BaseModel):
     error: bool = False
     error_code: str | None = None
     error_message: str | None = None
+    stack_status: dict | None = None
 
 
 def _extract_bearer(authorization: str | None) -> str:
@@ -120,6 +121,13 @@ async def profile(
     return profile_from_token(token, region)
 
 
+@app.get("/api/ui/stack")
+async def ui_stack_status(region: str = "") -> dict:
+    from apex_rag_demo.web.ui_stack import build_ui_stack_status
+
+    return build_ui_stack_status(region=region or None)
+
+
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(
     body: ChatRequest,
@@ -165,6 +173,7 @@ async def chat(
         state,
         question=question,
         session_id=session_id,
+        region=body.region,
     )
     return ChatResponse(**payload)
 
@@ -233,12 +242,12 @@ async def chat_stream(
                     "mutations_dry_run": False,
                     **failure_state_patch(exc, phase="chat_stream", question=question),
                 }
-                result = build_chat_response_dict(state, question=question, session_id=session_id)
+                result = build_chat_response_dict(state, question=question, session_id=session_id, region=body.region)
                 yield f"event: result\ndata: {json.dumps(result)}\n\n"
                 break
             elif kind == "done":
                 state = payload if isinstance(payload, dict) else {}
-                result = build_chat_response_dict(state, question=question, session_id=session_id)
+                result = build_chat_response_dict(state, question=question, session_id=session_id, region=body.region)
                 yield f"event: result\ndata: {json.dumps(result)}\n\n"
                 break
 

@@ -60,6 +60,36 @@ export type ChatResult = {
   error_code?: string | null;
   error_message?: string | null;
   semantic_routing?: { label?: string };
+  stack_status?: StackStatus | null;
+};
+
+export type StackStatus = {
+  environment?: string;
+  region?: string;
+  chat_model?: string;
+  chat_model_label?: string;
+  embed_model?: string;
+  embed_backend?: string;
+  rerank_model?: string;
+  vector_store?: string;
+  kg_enabled?: boolean;
+  context_budget_tokens?: number;
+  context_routing_budget_tokens?: number;
+  context_percent_left?: number | null;
+  tool_count?: number;
+  kb_chunks?: number;
+  openapi_sources?: number;
+  sources_count?: number;
+  bar_label?: string;
+  last_llm_context?: {
+    estimated_tokens?: number;
+    budget_tokens?: number;
+    percent_used?: number;
+    percent_left?: number;
+    routing?: boolean;
+    prompt_trimmed?: boolean;
+    model?: string;
+  } | null;
 };
 
 export type ChatMessage =

@@ -492,6 +492,64 @@ function authErrorMessage(res, errBody) {
   return errBody?.message || res.statusText || "Unauthorized";
 }
 
+function renderStackDetails(stack, region) {
+  const last = stack.last_llm_context;
+  const rows = [
+    ["Chat model", stack.chat_model || stack.chat_model_label || "—"],
+    ["Embed", `${stack.embed_backend || "—"} · ${stack.embed_model || "—"}`],
+    ["Rerank", stack.rerank_model || "—"],
+    [
+      "Context budget",
+      `synthesis ${stack.context_budget_tokens?.toLocaleString() || "—"} tok · routing ${stack.context_routing_budget_tokens?.toLocaleString() || "—"} tok`,
+    ],
+  ];
+  if (last) {
+    rows.push([
+      "Last LLM call",
+      `~${last.estimated_tokens?.toLocaleString()} / ${last.budget_tokens?.toLocaleString()} tok (${last.percent_left}% left${last.routing ? ", routing" : ", synthesis"}${last.prompt_trimmed ? ", trimmed" : ""})`,
+    ]);
+  }
+  rows.push([
+    "Indexed sources",
+    `${stack.tool_count || 0} tools · ${stack.kb_chunks || 0} KB · ${stack.openapi_sources || 0} OpenAPI${stack.kg_enabled ? " · Neo4j KG" : ""} · ${stack.vector_store || "—"}`,
+  ]);
+  rows.push(["Environment", `${stack.environment || "—"}${region ? ` · region ${region}` : ""}`]);
+  const dl = el("dl");
+  for (const [dt, dd] of rows) {
+    const block = el("div");
+    block.appendChild(el("dt", "", dt));
+    block.appendChild(el("dd", "", dd));
+    dl.appendChild(block);
+  }
+  return dl;
+}
+
+function applyStackStatus(stack, region) {
+  if (!stack) return;
+  const summary = stack.bar_label || [
+    stack.chat_model_label || "LLM",
+    stack.context_percent_left != null ? `${stack.context_percent_left}% ctx left` : "ctx —",
+    `${stack.sources_count || 0} sources`,
+    region || stack.environment || "",
+  ].join(" · ");
+  $("stack-context-summary").textContent = summary;
+  const details = $("stack-context-details");
+  details.innerHTML = "";
+  details.appendChild(renderStackDetails(stack, region));
+}
+
+async function refreshStackBar(region) {
+  const r = region || sessionStorage.getItem(STORAGE_REGION) || "US-West";
+  try {
+    const res = await fetch(`/api/ui/stack?region=${encodeURIComponent(r)}`);
+    if (!res.ok) return;
+    const stack = await res.json();
+    applyStackStatus(stack, r);
+  } catch {
+    $("stack-context-summary").textContent = "Stack status unavailable";
+  }
+}
+
 function showMain(profile, region) {
   $("screen-login").hidden = true;
   $("screen-main").hidden = false;
@@ -501,6 +559,7 @@ function showMain(profile, region) {
   $("profile-email").textContent = profile.email || profile.userId || "";
   $("profile-region").textContent = `Region: ${region}`;
   $("region-main").value = region;
+  refreshStackBar(region);
 }
 
 function appendUserMessage(text) {
@@ -774,6 +833,7 @@ async function sendChat(message, options = {}) {
     sessionStorage.removeItem(STORAGE_PENDING_CHAT);
   }
   appendBotMessage(data);
+  if (data.stack_status) applyStackStatus(data.stack_status, region);
 }
 
 async function initFromSession() {
@@ -836,6 +896,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     sessionStorage.setItem(STORAGE_REGION, region);
     $("profile-region").textContent = `Region: ${region}`;
     $("region-picker").hidden = true;
+    refreshStackBar(region);
+  });
+
+  $("stack-context-toggle").addEventListener("click", () => {
+    const details = $("stack-context-details");
+    const open = details.hidden;
+    details.hidden = !open;
+    $("stack-context-toggle").setAttribute("aria-expanded", open ? "true" : "false");
+    $("stack-context-chevron").textContent = open ? "▾" : "▸";
   });
 
   document.addEventListener("click", (e) => {

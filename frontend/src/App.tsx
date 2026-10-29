@@ -19,7 +19,7 @@ import {
   setPendingRerunFromLast,
   setSession,
 } from "@/lib/session";
-import type { ChatMessage, ChatResult, Region, UserProfile } from "@/types/api";
+import type { ChatMessage, ChatResult, Region, StackStatus, UserProfile } from "@/types/api";
 import type { PendingRerun } from "@/lib/session";
 
 function nextId() {
@@ -43,6 +43,7 @@ export function App() {
   const [pendingConfirm, setPendingConfirm] = useState<{ mutation_token: string; message?: string } | null>(null);
   const [pendingRerun, setPendingRerun] = useState<PendingRerun | null>(() => readPendingRerun());
   const [rerunAfterLogin, setRerunAfterLogin] = useState(true);
+  const [stackStatus, setStackStatus] = useState<StackStatus | null>(null);
 
   useEffect(() => {
     if (!authenticated) {
@@ -213,6 +214,7 @@ export function App() {
       }
 
       setMessages((prev) => [...prev, { id: nextId(), role: "assistant", data }]);
+      if (data.stack_status) setStackStatus(data.stack_status);
     } catch (e) {
       const err = e as Error & { status?: number; detail?: { detail?: string } };
       if (err.status === 401) {
@@ -292,6 +294,7 @@ export function App() {
             }}
             onSend={(text) => sendChat(text)}
             onConfirmMutation={handleConfirmMutation}
+            stackStatus={stackStatus}
           />
         )}
       </div>

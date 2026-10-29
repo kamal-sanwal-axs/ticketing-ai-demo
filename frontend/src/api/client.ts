@@ -23,6 +23,13 @@ export async function fetchProfile(token: string, region: string): Promise<UserP
   return res.json() as Promise<UserProfile>;
 }
 
+export async function fetchStackStatus(region: string) {
+  const q = region ? `?region=${encodeURIComponent(region)}` : "";
+  const res = await fetch(`/api/ui/stack${q}`);
+  if (!res.ok) throw new Error("Stack status unavailable");
+  return res.json() as Promise<import("@/types/api").StackStatus>;
+}
+
 function authErrorMessage(res: Response, errBody: { detail?: unknown; message?: string }) {
   const detail = errBody?.detail;
   if (typeof detail === "string") return detail;

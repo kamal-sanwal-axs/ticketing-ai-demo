@@ -1,5 +1,6 @@
-import type { ChatMessage as ChatMessageType, UserProfile } from "@/types/api";
+import type { ChatMessage as ChatMessageType, StackStatus, UserProfile } from "@/types/api";
 import { ChatPanel } from "@/components/chat/ChatPanel";
+import { StackContextBar } from "@/components/StackContextBar";
 
 type PendingConfirm = { mutation_token: string; message?: string };
 
@@ -21,6 +22,7 @@ type Props = {
   onSaveRegion: () => void;
   onSend: (text: string) => void;
   onConfirmMutation: (token: string) => void;
+  stackStatus?: StackStatus | null;
 };
 
 export function MainScreen({
@@ -41,6 +43,7 @@ export function MainScreen({
   onSaveRegion,
   onSend,
   onConfirmMutation,
+  stackStatus,
 }: Props) {
   return (
     <section className="card" id="screen-main">
@@ -79,6 +82,8 @@ export function MainScreen({
           <button type="button" onClick={onSaveRegion}>Save</button>
         </div>
       ) : null}
+
+      <StackContextBar region={region} stackStatus={stackStatus} />
 
       <ChatPanel
         messages={messages}
