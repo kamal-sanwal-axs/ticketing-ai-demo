@@ -219,6 +219,66 @@ def tool_catalog_for_prompt(*, max_tools: int = 48) -> str:
     return "\n".join(lines)
 
 
+def tool_catalog_for_orchestrator(
+    question: str,
+    *,
+    classified_intent: str = "",
+    semantic_intent_hint: str | None = None,
+    max_tools: int = 14,
+) -> str:
+    """Small, question-relevant tool list — do not paste the full OpenAPI catalog into routing LLM."""
+    catalog = load_dynamic_tool_catalog()
+    if not catalog:
+        return "Dynamic tools: (catalog empty — sync openapi cache)"
+
+    picked: list[str] = []
+    intent_hints: list[str] = []
+    for raw in (classified_intent, semantic_intent_hint or "", preferred_legacy_intent(question) or ""):
+        leg = str(raw or "").strip().lower()
+        if leg and leg in INTENTS and leg not in intent_hints:
+            intent_hints.append(leg)
+
+    for leg in intent_hints:
+        for tid, tool in catalog.items():
+            if tool.legacy_intent == leg and tid not in picked:
+                picked.append(tid)
+            if len(picked) >= max_tools:
+                break
+        if len(picked) >= max_tools:
+            break
+
+    scored = dynamic_tool_scores(question)
+    for tid, _score in sorted(scored.items(), key=lambda item: item[1], reverse=True):
+        if tid in picked:
+            continue
+        tool = catalog.get(tid)
+        if tool and tool_matches_question(tool, question):
+            picked.append(tid)
+        if len(picked) >= max_tools:
+            break
+
+    if len(picked) < min(6, max_tools):
+        for tid, tool in catalog.items():
+            if tid in picked:
+                continue
+            if tool.legacy_intent in ("marketing_events", "list_client_venues", "get_event"):
+                picked.append(tid)
+            if len(picked) >= max_tools:
+                break
+
+    lines = [
+        "Dynamic tools (ranked subset for this turn — not the full catalog; "
+        "debug: GET /api/tools):",
+    ]
+    for tid in picked[:max_tools]:
+        tool = catalog[tid]
+        lines.append(f"- {tool.tool_id}: {tool.summary[:90] or tool.path_template} → {tool.legacy_intent}")
+    omitted = len(catalog) - len(picked)
+    if omitted > 0:
+        lines.append(f"(+ {omitted} other tools omitted from prompt to save context)")
+    return "\n".join(lines)
+
+
 def legacy_intent_for_tool_id(tool_id: str) -> str | None:
     tool = get_dynamic_tool(tool_id)
     return tool.legacy_intent if tool else None
@@ -347,6 +407,17 @@ def tool_matches_question(tool: DynamicTool, question: str) -> bool:
         if looks_like_b2b_reports_question(question):
             return False
         return bool(_UUID_RE.search(bare)) or "get event" in bare.lower()
+    if tool.legacy_intent == "inventory_zones":
+        from apex_rag_demo.agentic_event import looks_like_seat_inventory_demo
+        from apex_rag_demo.reports_intent_helpers import looks_like_b2b_reports_question
+
+        if looks_like_b2b_reports_question(question):
+            return False
+        if not _UUID_RE.search(bare):
+            return False
+        if looks_like_seat_inventory_demo(bare):
+            return True
+        return bool(re.search(r"\binventory\s+zones?\b", bare, re.I))
     if tool.legacy_intent == "get_venue_config":
         from apex_rag_demo.reports_intent_helpers import looks_like_manifest_venue_config
 

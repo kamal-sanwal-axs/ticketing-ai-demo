@@ -90,6 +90,84 @@ def _update_session_focus(
                 if name:
                     focus["eventLabel"] = name[:200]
 
+    if intent == "list_client_venues" and isinstance(payload, dict):
+        from apex_rag_demo.event_list import iter_event_dicts
+
+        focus["lastIntent"] = "list_client_venues"
+        cached_cv = _client_venues_payload_for_storage(payload)
+        if cached_cv:
+            focus["hasClientVenueList"] = True
+            store["last_client_venues_payload"] = cached_cv
+
+    if intent == "marketing_events" and isinstance(payload, dict):
+        from apex_rag_demo.event_list import iter_event_dicts
+
+        focus["lastIntent"] = "marketing_events"
+        events = iter_event_dicts(payload)
+        if events:
+            focus["hasMarketingList"] = True
+            cached = _marketing_payload_for_storage(payload)
+            if cached:
+                store["last_marketing_payload"] = cached
+
+
+def load_last_marketing_payload(user_id: str, session_id: str) -> dict[str, Any] | None:
+    if not user_id or not session_id:
+        return None
+    path = _GRAPH_STATE_DIR / user_id / f"{session_id}.json"
+    try:
+        if not path.is_file():
+            return None
+        store = json.loads(path.read_text(encoding="utf-8"))
+        block = store.get("last_marketing_payload")
+        if isinstance(block, dict):
+            from apex_rag_demo.event_list import iter_event_dicts
+
+            if iter_event_dicts(block):
+                return block
+    except (json.JSONDecodeError, OSError):
+        return None
+    return None
+
+
+def _marketing_payload_for_storage(payload: dict[str, Any]) -> dict[str, Any]:
+    from apex_rag_demo.event_list import iter_event_dicts
+
+    if not iter_event_dicts(payload):
+        return {}
+    out: dict[str, Any] = {}
+    for key in ("events", "Events", "items"):
+        if key in payload and isinstance(payload[key], list):
+            out[key] = payload[key]
+            break
+    for meta_key in ("_date_filter", "_event_enrichment", "_source", "_marketing_status"):
+        if meta_key in payload:
+            out[meta_key] = payload[meta_key]
+    return out
+
+
+def _client_venues_payload_for_storage(payload: dict[str, Any]) -> dict[str, Any]:
+    venues = list(payload.get("clientVenues") or payload.get("ClientVenues") or [])
+    if not venues:
+        return {}
+    return {"clientVenues": venues}
+
+
+def load_last_client_venues_payload(user_id: str, session_id: str) -> dict[str, Any] | None:
+    if not user_id or not session_id:
+        return None
+    path = _GRAPH_STATE_DIR / user_id / f"{session_id}.json"
+    try:
+        if not path.is_file():
+            return None
+        store = json.loads(path.read_text(encoding="utf-8"))
+        block = store.get("last_client_venues_payload")
+        if isinstance(block, dict) and block.get("clientVenues"):
+            return block
+    except (json.JSONDecodeError, OSError):
+        return None
+    return None
+
 
 def recall_for_session(
     user_id: str,

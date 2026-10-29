@@ -618,6 +618,16 @@ def format_deterministic(
     if intent == "marketing_events":
         return format_marketing_events(payload, api_error, question=question)
 
+    if intent in (
+        "get_venue_config",
+        "b2b_flash_report",
+        "reports_inventory_event",
+        "reports_timezones",
+    ):
+        from apex_rag_demo.reports_display import format_reports_manifest_text
+
+        return format_reports_manifest_text(intent, payload, plan, api_error)
+
     if api_error:
         svc = _FORMATTERS.get(intent, "API")
         return f"{svc} error: {api_error}"

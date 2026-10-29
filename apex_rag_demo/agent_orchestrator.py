@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from apex_rag_demo.api_guidance import load_apex_services
 from apex_rag_demo.clients.llama import chat_completion
 from apex_rag_demo.config import CHAT_TEMPERATURE_ROUTING, ORCHESTRATOR_MAX_ROUNDS
 from apex_rag_demo.crud_registry import CRUD_CATALOG
@@ -29,32 +28,40 @@ Return JSON only:
 
 Rules:
 - Prefer tool_id + parameters from the dynamic OpenAPI catalog (not inventing URLs).
-- Use finish when api_trace already has enough data to answer, or intent is explain with no API.
 - Fan orders need email/order number; event catalog/list uses marketing GET /v1/events tool when listed.
 - You may chain calls up to {ORCHESTRATOR_MAX_ROUNDS} rounds.
 - Use call_plugin only for registered user plugins.
 - Use run_sandbox for custom Python or React+Recharts code in Docker (see sandbox block below)."""
 
 
-def _api_catalog_block() -> str:
-    from apex_rag_demo.dynamic_tools import dynamic_tools_enabled, tool_catalog_for_prompt
+def _api_catalog_block(
+    question: str = "",
+    *,
+    classified_intent: str = "",
+    semantic_intent_hint: str | None = None,
+) -> str:
+    from apex_rag_demo.dynamic_tools import dynamic_tools_enabled, tool_catalog_for_orchestrator
 
     lines: list[str] = []
     if dynamic_tools_enabled():
-        lines.append(tool_catalog_for_prompt())
+        lines.append(
+            tool_catalog_for_orchestrator(
+                question,
+                classified_intent=classified_intent,
+                semantic_intent_hint=semantic_intent_hint,
+            ),
+        )
     lines.append("Callable intents (legacy fallback → HTTP wrappers):")
     for entry in CRUD_CATALOG:
         lines.append(f"- {entry.intent}: {entry.http} ({entry.summary})")
     lines.append("Also: search_events, list_client_venues, marketing_events (wired in demo).")
-    for svc in load_apex_services():
-        lines.append(f"Service {svc.get('id')}: {svc.get('swagger_url')}")
     return "\n".join(lines)
 
 
 def _trace_block(api_trace: list[dict[str, Any]]) -> str:
     if not api_trace:
         return "api_trace: (empty — no API calls yet)"
-    return "api_trace:\n" + json.dumps(api_trace, default=str, indent=2)[:8000]
+    return "api_trace:\n" + json.dumps(api_trace, default=str, indent=2)[:4500]
 
 
 def decide_orchestrator_step(
@@ -65,6 +72,7 @@ def decide_orchestrator_step(
     api_trace: list[dict[str, Any]] | None,
     orchestrator_round: int,
     user_id: str = "",
+    session_id: str = "",
     chroma_system_context: str | None = None,
     semantic_context_block: str | None = None,
     chat_history: list[dict[str, Any]] | None = None,
@@ -96,6 +104,17 @@ def decide_orchestrator_step(
     )
     if compound:
         return compound
+
+    from apex_rag_demo.marketing_list_followup import try_marketing_list_followup_step
+
+    marketing_followup = try_marketing_list_followup_step(
+        question,
+        session_focus=session_focus,
+        user_id=user_id,
+        session_id=session_id,
+    )
+    if marketing_followup:
+        return marketing_followup
 
     from apex_rag_demo.reports_orchestrator import try_reports_orchestrator_step
 
@@ -130,7 +149,21 @@ def decide_orchestrator_step(
     if agentic:
         return agentic
 
+    from apex_rag_demo.reports_orchestrator import try_reports_finish_step
+
+    reports_finish = try_reports_finish_step(
+        question,
+        api_trace=api_trace,
+        session_focus=session_focus,
+    )
+    if reports_finish:
+        return reports_finish
+
     from apex_rag_demo.agentic_event import try_agentic_finish_step
+    from apex_rag_demo.reports_intent_helpers import looks_like_b2b_reports_question
+
+    if looks_like_b2b_reports_question(strip_ui_region(question)):
+        return None
 
     finish = try_agentic_finish_step(
         question,
@@ -169,18 +202,28 @@ def decide_orchestrator_step(
     focus = session_focus or {}
     from apex_rag_demo.sandbox_toolkit.orchestrator import orchestrator_sandbox_catalog_block
 
-    user = (
-        f"{_api_catalog_block()}\n\n"
+    catalog_and_intents = _api_catalog_block(
+        question,
+        classified_intent=classified_intent,
+        semantic_intent_hint=semantic_intent_hint,
+    )
+    orchestrator_system = (
+        f"{_ORCHESTRATOR_SYSTEM}\n\n"
+        f"{catalog_and_intents}\n\n"
         f"{plugin_catalog_block(user_id)}\n\n"
-        f"{orchestrator_sandbox_catalog_block()}\n\n"
+        f"{orchestrator_sandbox_catalog_block()}"
+    )
+    user = (
         f"classified_intent (hint): {classified_intent}\n"
+        f"semantic_intent_hint: {semantic_intent_hint or '(none)'} score={semantic_score:.2f}\n"
         f"session_focus: {json.dumps(focus, default=str)[:600]}\n"
         f"round: {orchestrator_round} / max {ORCHESTRATOR_MAX_ROUNDS}\n\n"
         f"{_trace_block(api_trace or [])}\n\n"
-        f"User message:\n{strip_ui_region(question)}"
+        f"User message (authoritative — follow this, not similar history alone):\n"
+        f"{strip_ui_region(question)}"
     )
     raw = chat_completion(
-        _ORCHESTRATOR_SYSTEM,
+        orchestrator_system,
         user,
         temperature=CHAT_TEMPERATURE_ROUTING,
         chroma_system_context=chroma_system_context,
@@ -214,6 +257,8 @@ def decide_orchestrator_step(
 
     action = str(data.get("action") or "finish").strip().lower()
     intent = str(data.get("intent") or classified_intent).strip().lower()
+    if intent not in INTENTS:
+        intent = classified_intent
     plan = data.get("plan") if isinstance(data.get("plan"), dict) else {}
     params = data.get("parameters") if isinstance(data.get("parameters"), dict) else {}
     tool_id = str(data.get("tool_id") or plan.get("tool_id") or "").strip()

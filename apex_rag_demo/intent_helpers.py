@@ -125,6 +125,16 @@ def guard_api_intent(intent: str, question: str) -> str:
     if looks_like_event_or_venue_detail_with_id(question):
         return "get_event"
 
+    from apex_rag_demo.marketing_list_followup import (
+        looks_like_explicit_create_organization,
+        looks_like_marketing_list_reformat,
+    )
+
+    if intent == "create_organization" and not looks_like_explicit_create_organization(bare):
+        if looks_like_marketing_list_reformat(bare):
+            return "marketing_events"
+        return "explain"
+
     if looks_like_order_search_request(bare):
         if re.search(r"\bpayment\s+status", bare, re.I):
             return "search_order_payment_statuses"

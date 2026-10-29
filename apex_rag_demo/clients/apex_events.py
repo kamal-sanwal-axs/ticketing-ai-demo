@@ -18,11 +18,35 @@ def get_event(event_id: str) -> dict[str, Any]:
             "eventId": event_id,
             "name": "Demo Event",
             "status": "Draft",
+            "event": {
+                "id": event_id,
+                "client": {"id": "demo-client", "contextId": 100, "name": "Demo client"},
+            },
         }
     with httpx.Client(timeout=60.0) as client:
         response = client.get(url, headers=auth_headers())
         response.raise_for_status()
         return response.json()
+
+
+def get_event_ticketing_integration(event_id: str) -> dict[str, Any]:
+    """GET /{eventId}/integration — numeric contextId/eventId for B2B reports."""
+    url = f"{APEX_EVENTS_BASE_URL}/{event_id}/integration"
+    if use_mock_api():
+        return {
+            "_mock": True,
+            "_openapi": APEX_EVENTS_SWAGGER_URL,
+            "endpoint": url,
+            "contextId": 100,
+            "eventId": 200,
+            "tenant": "demo",
+            "environment": "dev",
+        }
+    with httpx.Client(timeout=60.0) as client:
+        response = client.get(url, headers=auth_headers())
+        response.raise_for_status()
+        data = response.json()
+        return data if isinstance(data, dict) else {"data": data}
 
 
 def update_event(event_id: str, body: dict[str, Any], *, dry_run: bool) -> dict[str, Any]:

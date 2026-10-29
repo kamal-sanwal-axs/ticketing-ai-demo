@@ -165,6 +165,7 @@ uvicorn apex_rag_demo.web.app:app --reload --port 8080
 | Logprobs ignored | Use `CHAT_LOGPROBS=5` — `TOP_LOGPROBS` is not used |
 | Neo4j auth errors | `NEO4J_PASSWORD` matches compose |
 | Missing features | Keys only in `.env.example` still apply via `config.py` defaults |
+| `resource_tracker: leaked semaphore` on exit (Python 3.14) | Harmless shutdown noise from **sentence-transformers / joblib (loky)** after embedding work. App calls `shutdown_embedding_workers()` on FastAPI shutdown; **`uvicorn --reload`** killing workers abruptly can still print it once. Set `LOKY_MAX_CPU_COUNT=1` (default in code) or ignore if the process exited cleanly. |
 
 ## Related
 

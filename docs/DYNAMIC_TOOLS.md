@@ -11,6 +11,8 @@
 
 Routing embeds **tool descriptions** (summary + HTTP line from swagger), not a static phrase list in Python.
 
+**Orchestrator LLM:** only a **ranked subset** (~14 tools) is injected into the routing prompt (`tool_catalog_for_orchestrator`), plus legacy intents — not the full OpenAPI catalog. Full list: `GET /api/tools`. Catalog + plugins live in the **system** role; the user turn stays short so trimming does not drop the authoritative question.
+
 ## Cursor-like flow
 
 ```text

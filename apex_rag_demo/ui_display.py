@@ -46,6 +46,9 @@ def build_ui_display(state: dict[str, Any]) -> dict[str, Any] | None:
     from apex_rag_demo.trace_payload import enrich_state_from_best_trace
 
     state = enrich_state_from_best_trace(state)
+    from apex_rag_demo.marketing_list_followup import apply_marketing_session_reuse
+
+    state = apply_marketing_session_reuse(state)
     from apex_rag_demo.compound_request import build_compound_display
 
     compound_ui = build_compound_display(state)
@@ -208,15 +211,37 @@ def build_ui_display(state: dict[str, Any]) -> dict[str, Any] | None:
         hierarchy = get_hierarchy_index()
         rows = client_venue_table_rows(payload, hierarchy=hierarchy)
         footnote = _note_mock(payload) or hierarchy_footnote(hierarchy)
+        group_by = str(plan.get("_followup_group_by") or "").strip()
+        charts: list[dict[str, Any]] = []
+        sections: list[dict[str, Any]] = []
+        if plan.get("_pie_chart"):
+            from apex_rag_demo.ui_schema import build_org_count_pie_chart
+
+            pie = build_org_count_pie_chart(rows)
+            if pie:
+                charts.append(pie)
+        if group_by:
+            from apex_rag_demo.ui_schema import build_grouped_event_sections
+
+            sections = build_grouped_event_sections(
+                rows,
+                group_by=group_by,
+                columns=CLIENT_VENUE_HIERARCHY_TABLE_COLUMNS,
+                entity_label="venue",
+            )
+        layout = "dashboard" if charts else ("article" if sections else "table")
         return {
-            "type": "table",
-            "title": "Client venues (org → client → venue)",
-            "subtitle": f"Search API · UI region {region} (preference only, not an API filter)",
+            "type": layout,
+            "title": "Client venues grouped by organization" if group_by else "Client venues (org → client → venue)",
+            "subtitle": f"Search API · UI region {region} (preference only, not an API filter)"
+            + (" · grouped from session cache" if plan.get("_reuse_session_list") else ""),
             "badge": _badge(intent),
             "footnote": footnote,
             "count": len(rows),
             "columns": CLIENT_VENUE_HIERARCHY_TABLE_COLUMNS,
-            "rows": rows,
+            "rows": [] if sections else rows,
+            "charts": charts,
+            "sections": sections,
         }
 
     if intent == "search_events":
@@ -351,6 +376,7 @@ def build_ui_display(state: dict[str, Any]) -> dict[str, Any] | None:
 
         from apex_rag_demo.ui_schema import (
             build_events_timeline_chart,
+            build_grouped_event_sections,
             project_event_rows,
             resolve_event_list_columns,
             wants_event_timeline_chart,
@@ -359,11 +385,14 @@ def build_ui_display(state: dict[str, Any]) -> dict[str, Any] | None:
         from apex_rag_demo.ui_schema import wants_org_hierarchy_in_event_list
 
         list_columns = resolve_event_list_columns(question)
-        use_hierarchy = wants_org_hierarchy_in_event_list(question)
+        use_hierarchy = wants_org_hierarchy_in_event_list(question) or bool(
+            plan.get("_display_org_hierarchy"),
+        )
+        group_by = str(plan.get("_followup_group_by") or "").strip()
         hierarchy_index = hierarchy_for_event_list(use_hierarchy)
         all_rows = event_table_rows(p, hierarchy=hierarchy_index)
-        rows, incomplete_rows = partition_event_table_rows(all_rows)
-        rows = project_event_rows(rows, list_columns)
+        ok_raw, incomplete_rows = partition_event_table_rows(all_rows)
+        rows = project_event_rows(ok_raw, list_columns)
         names_only = list_columns == EVENT_NAME_ONLY_TABLE_COLUMNS
         enrich_meta = p.get("_event_enrichment") if isinstance(p.get("_event_enrichment"), dict) else None
         date_meta = p.get("_date_filter") if isinstance(p.get("_date_filter"), dict) else None
@@ -426,6 +455,29 @@ def build_ui_display(state: dict[str, Any]) -> dict[str, Any] | None:
             )
 
         sections: list[dict[str, Any]] = []
+        if group_by and ok_raw:
+            from apex_rag_demo.ui_schema import EVENT_CATALOG_TABLE_COLUMNS
+            from apex_rag_demo.event_list import EVENT_HIERARCHY_TABLE_COLUMNS
+
+            gcols = (
+                EVENT_HIERARCHY_TABLE_COLUMNS
+                if group_by == "organization"
+                else EVENT_CATALOG_TABLE_COLUMNS
+            )
+            grouped_rows = project_event_rows(ok_raw, gcols)
+            sections = build_grouped_event_sections(
+                grouped_rows,
+                group_by=group_by,
+                columns=gcols,
+            )
+            title = (
+                "Events grouped by organization"
+                if group_by == "organization"
+                else "Events grouped by start date"
+            )
+            subtitle += " · Grouped view (same session list, no new API call)"
+            display_rows = []
+            columns = gcols
         if incomplete_rows:
             sections.append(
                 {
@@ -450,7 +502,11 @@ def build_ui_display(state: dict[str, Any]) -> dict[str, Any] | None:
                 },
             )
 
-        layout_type = "dashboard" if charts and display_rows else ("table" if display_rows else "article")
+        layout_type = (
+            "article"
+            if sections and not display_rows
+            else ("dashboard" if charts and display_rows else ("table" if display_rows else "article"))
+        )
         return {
             "type": layout_type,
             "title": title,

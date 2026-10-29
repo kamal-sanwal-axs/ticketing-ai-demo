@@ -1,6 +1,12 @@
 from __future__ import annotations
 
+import atexit
+import os
 from functools import lru_cache
+
+# Avoid extra tokenizer threads + cap loky worker pool (sentence-transformers → joblib).
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+os.environ.setdefault("LOKY_MAX_CPU_COUNT", "1")
 
 from apex_rag_demo.config import (
     EMBEDDING_BACKEND,
@@ -75,3 +81,21 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
 
         return http_embed(texts)
     return embed_texts_inprocess(texts)
+
+
+def shutdown_embedding_workers() -> None:
+    """Best-effort loky/joblib pool shutdown (reduces semaphore leak warnings on exit, Py 3.14+)."""
+    try:
+        from joblib.externals.loky import get_reusable_executor
+
+        ex = get_reusable_executor()
+        shutdown = ex.shutdown
+        try:
+            shutdown(wait=True, kill_workers=True)
+        except TypeError:
+            shutdown(wait=True)
+    except Exception:
+        pass
+
+
+atexit.register(shutdown_embedding_workers)

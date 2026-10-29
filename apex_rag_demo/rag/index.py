@@ -114,9 +114,15 @@ def retrieve_bi_encoder_candidates(question: str, fetch_k: int) -> list[str]:
         return candidates
 
 
-def rerank_retrieval_candidates(question: str, candidates: list[str], top_k: int = TOP_K) -> list[str]:
+def rerank_retrieval_candidates(
+    question: str,
+    candidates: list[str],
+    top_k: int = TOP_K,
+    *,
+    intent_hint: str | None = None,
+) -> list[str]:
     """Phase 2: cross-encoder rerank (sentence-transformers CrossEncoder)."""
-    return rerank_texts(question, candidates, top_k)
+    return rerank_texts(question, candidates, top_k, intent_hint=intent_hint)
 
 
 def retrieve(question: str, top_k: int = TOP_K) -> list[str]:

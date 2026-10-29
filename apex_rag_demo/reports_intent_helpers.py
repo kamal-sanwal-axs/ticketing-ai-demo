@@ -110,6 +110,8 @@ def extract_report_numeric_ids_from_event_payload(
     if not payload or not isinstance(payload, dict):
         return None, None
 
+    from apex_rag_demo.event_list import unwrap_event_payload
+
     context_id: int | None = None
     event_id: int | None = None
 
@@ -135,23 +137,104 @@ def extract_report_numeric_ids_from_event_payload(
                 walk(item, depth + 1)
 
     walk(payload)
+    event = unwrap_event_payload(payload)
+    if isinstance(event, dict):
+        client = event.get("client") or event.get("Client")
+        if isinstance(client, dict):
+            consider("contextId", client.get("contextId") or client.get("ContextId"))
     return context_id, event_id
 
 
-def resolve_report_ids_via_events_api(event_uuid: str) -> tuple[int | None, int | None, str | None]:
-    """Load event by UUID and scrape numeric ids for reports-api."""
+def resolve_report_ids_from_event(
+    event_uuid: str,
+    event_payload: dict[str, Any] | None = None,
+) -> tuple[int | None, int | None, str | None]:
+    """Numeric B2B report ids from events GET (+ integration when needed)."""
+    from apex_rag_demo.clients import apex_events
     from apex_rag_demo.event_resolve import get_event_with_context
 
-    payload, err = get_event_with_context(event_uuid)
-    if err:
-        return None, None, err
+    payload = event_payload
+    err: str | None = None
+    if payload is None:
+        payload, err = get_event_with_context(event_uuid)
+        if err:
+            return None, None, err
     ctx, ev = extract_report_numeric_ids_from_event_payload(payload)
+    if ctx is not None and ev is not None:
+        return ctx, ev, None
+    try:
+        integration = apex_events.get_event_ticketing_integration(event_uuid)
+        if isinstance(integration, dict):
+            ictx = integration.get("contextId") or integration.get("ContextId")
+            iev = integration.get("eventId") or integration.get("EventId")
+            if isinstance(ictx, int) and ictx > 0:
+                ctx = ctx or ictx
+            if isinstance(iev, int) and iev > 0:
+                ev = ev or iev
+    except Exception as exc:  # noqa: BLE001
+        if ctx is None and ev is None:
+            return None, None, str(exc)
     if ctx is None and ev is None:
         return None, None, (
             "Events API returned the event but no numeric contextId/eventId for B2B reports. "
             "Pass numeric ids (e.g. sales report context 123 event 456) or set REPORTS_DEFAULT_CONTEXT_ID."
         )
     return ctx, ev, None
+
+
+def resolve_report_ids_via_events_api(event_uuid: str) -> tuple[int | None, int | None, str | None]:
+    """Load event by UUID and scrape numeric ids for reports-api."""
+    return resolve_report_ids_from_event(event_uuid, event_payload=None)
+
+
+def reports_plan_needs_numeric_ids(intent: str, plan: dict[str, Any]) -> bool:
+    if intent == "reports_timezones":
+        return False
+    if intent == "b2b_flash_report":
+        kind = str(plan.get("flashReport") or "sales_event")
+        if kind == "sales_date_range":
+            return plan.get("contextId") is None
+        return plan.get("contextId") is None or plan.get("eventId") is None
+    if intent == "reports_inventory_event":
+        return plan.get("contextId") is None or plan.get("eventId") is None
+    return False
+
+
+def report_event_uuid(question: str, plan: dict[str, Any], session_focus: dict[str, Any] | None) -> str | None:
+    from apex_rag_demo.id_prompts import resolve_event_id
+
+    for source in (
+        str(plan.get("eventUuid") or "").strip(),
+        extract_event_uuid_from_question(question) or "",
+        str(resolve_event_id(question, plan, session_focus) or "").strip(),
+    ):
+        if source:
+            return source
+    return None
+
+
+def trace_has_get_event_for_uuid(trace: list[dict[str, Any]], event_uuid: str) -> bool:
+    needle = event_uuid.strip().lower()
+    if not needle:
+        return False
+    for step in trace:
+        if step.get("intent") != "get_event":
+            continue
+        plan = step.get("plan") if isinstance(step.get("plan"), dict) else {}
+        eid = str(plan.get("eventId") or "").strip().lower()
+        if eid == needle:
+            return True
+    return False
+
+
+def last_trace_report_catalog(trace: list[dict[str, Any]]) -> bool:
+    if not trace:
+        return False
+    last = trace[-1]
+    if last.get("intent") not in ("b2b_flash_report", "reports_inventory_event"):
+        return False
+    payload = last.get("payload")
+    return isinstance(payload, dict) and bool(payload.get("_report_catalog"))
 
 
 def build_report_catalog_payload() -> dict[str, Any]:
@@ -229,7 +312,7 @@ def enrich_reports_plan_from_question(intent: str, plan: dict[str, Any], questio
             out["eventId"] = event_id
         out.setdefault("regionId", str(REPORTS_DEFAULT_REGION_ID))
         out.setdefault("locale", "en-US")
-        if looks_like_vague_report_request(question):
+        if looks_like_vague_report_request(question) and not extract_event_uuid_from_question(question):
             out["_report_catalog"] = True
         return out
 

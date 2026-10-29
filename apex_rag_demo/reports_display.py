@@ -115,3 +115,50 @@ def build_reports_manifest_display(
         }
 
     return None
+
+
+def format_reports_manifest_text(
+    intent: str,
+    payload: dict[str, Any] | None,
+    plan: dict[str, Any],
+    api_error: str | None,
+) -> str | None:
+    """Plain-text answer from live report/manifest payloads (no answer LLM)."""
+    display = build_reports_manifest_display(intent, payload, plan, api_error)
+    if not display:
+        return None
+
+    if api_error:
+        return str(api_error)
+
+    dtype = display.get("type")
+    title = str(display.get("title") or intent.replace("_", " "))
+    subtitle = display.get("subtitle")
+    header = title if not subtitle else f"{title} ({subtitle})"
+    lines: list[str] = [header + ":", ""]
+
+    for para in display.get("paragraphs") or []:
+        if para:
+            lines.append(str(para))
+
+    for field in display.get("fields") or []:
+        label = field.get("label") or "field"
+        value = field.get("value") or "—"
+        if label == "Payload preview" and isinstance(payload, dict) and payload.get("_report_catalog"):
+            continue
+        lines.append(f"{label}: {value}")
+
+    if dtype == "table":
+        rows = display.get("rows") or []
+        if rows:
+            lines.append("")
+            lines.append(f"Available reports ({len(rows)}):")
+            for row in rows[:12]:
+                if not isinstance(row, dict):
+                    continue
+                summary = row.get("summary") or row.get("intent") or row.get("path")
+                method = row.get("method") or ""
+                lines.append(f"- {summary} · {method} {row.get('path', '')}".strip())
+
+    text = "\n".join(lines).strip()
+    return text or None

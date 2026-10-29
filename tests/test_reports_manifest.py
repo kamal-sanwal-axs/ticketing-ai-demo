@@ -35,8 +35,10 @@ def test_dynamic_catalog_includes_reports_and_manifest():
     assert "get_venue_config" in intents
     assert "b2b_flash_report" in intents
     assert "reports_inventory_event" in intents
+    assert "inventory_zones" in intents
     assert any(t.service_id == "manifest" for t in catalog.values())
     assert any(t.service_id == "reports" for t in catalog.values())
+    assert any(t.service_id == "inventory" for t in catalog.values())
 
 
 def test_b2b_reports_phrase_detect():

@@ -211,7 +211,14 @@ def rerank_cross_encoder(state: DemoState) -> DemoState:
     from apex_rag_demo.rag.agent_chroma import append_kb_to_system_context
 
     candidates = state.get("retrieval_candidates") or []
-    ranked = rerank_retrieval_candidates(state["question"], candidates, TOP_K)
+    hint = state.get("semantic_route_intent") or state.get("semantic_intent_hint")
+    hint_str = str(hint).strip() if hint else None
+    ranked = rerank_retrieval_candidates(
+        state["question"],
+        candidates,
+        TOP_K,
+        intent_hint=hint_str,
+    )
     appendix = append_kb_to_system_context(state.get("chroma_system_context") or "", ranked)
     return {
         **state,
@@ -334,6 +341,7 @@ def orchestrator_decide(state: DemoState) -> DemoState:
         api_trace=state.get("api_trace"),
         orchestrator_round=round_num,
         user_id=state.get("user_id") or "",
+        session_id=state.get("session_id") or "",
         chroma_system_context=state.get("chroma_system_context"),
         semantic_context_block=state.get("semantic_context_block"),
         chat_history=state.get("chat_messages"),
@@ -341,7 +349,22 @@ def orchestrator_decide(state: DemoState) -> DemoState:
         semantic_score=float(state.get("semantic_score") or 0.0),
     )
     reason = str(decision.get("orchestrator_reason") or "")
-    used_llm = reason not in ("deterministic_single_step_read", "missing_event_id")
+    _deterministic_reasons = frozenset(
+        {
+            "deterministic_single_step_read",
+            "missing_event_id",
+            "reports_single_step",
+            "reports_after_event_lookup",
+            "reports_event_lookup_first",
+            "reports_after_catalog_lookup",
+            "reports_dynamic_tool_lookup",
+            "reports_dynamic_tool",
+            "reports_ids_unresolved",
+            "reports_api_complete",
+            "dynamic_openapi_tool",
+        },
+    )
+    used_llm = reason not in _deterministic_reasons
     out: DemoState = {
         **state,
         "orchestrator_round": round_num,
@@ -478,6 +501,9 @@ def synthesize_answer(state: DemoState) -> DemoState:
     from apex_rag_demo.trace_payload import enrich_state_from_best_trace
 
     state = enrich_state_from_best_trace(state)
+    from apex_rag_demo.marketing_list_followup import apply_marketing_session_reuse
+
+    state = apply_marketing_session_reuse(state)
     from apex_rag_demo.crud_policy import WriteKind, write_kind_for_intent
     from apex_rag_demo.id_prompts import clarify_missing_event_id
     from apex_rag_demo.intent_semantic import is_conversational_message
@@ -551,6 +577,10 @@ def synthesize_answer(state: DemoState) -> DemoState:
             "inventory_zones",
             "list_marketing_pixels",
             "get_event",
+            "get_venue_config",
+            "b2b_flash_report",
+            "reports_inventory_event",
+            "reports_timezones",
         },
     )
     if intent in _formatter_first and state.get("api_payload") is not None:

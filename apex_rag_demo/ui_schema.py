@@ -21,7 +21,8 @@ EVENT_CATALOG_TABLE_COLUMNS: list[dict[str, str]] = [
 ]
 
 _ORG_HIERARCHY_LIST_RE = re.compile(
-    r"\b(org|organization|principal|contractual|client venue|hierarchy|venue registry)\b",
+    r"\b(org|organization|principal|contractual|client venue|hierarchy|venue registry|"
+    r"group\s+by\s+(org|organization))\b",
     re.I,
 )
 
@@ -55,8 +56,68 @@ def project_event_rows(rows: list[dict[str, str]], columns: list[dict[str, str]]
     return [{k: row.get(k, "—") for k in keys} for row in rows]
 
 
+def build_org_count_pie_chart(rows: list[dict[str, str]], *, label_key: str = "contractualOrganization") -> dict[str, Any] | None:
+    from collections import Counter
+
+    counts: Counter[str] = Counter()
+    for row in rows:
+        label = str(row.get(label_key) or row.get("principalOrganization") or "—").strip()
+        if label == "—":
+            label = "Unknown organization"
+        counts[label] += 1
+    if not counts or sum(counts.values()) == 0:
+        return None
+    labels = sorted(counts.keys(), key=lambda k: (-counts[k], k))
+    return {
+        "kind": "pie",
+        "title": "Client venues by organization",
+        "labels": labels,
+        "values": [counts[l] for l in labels],
+    }
+
+
+def build_grouped_event_sections(
+    rows: list[dict[str, str]],
+    *,
+    group_by: str,
+    columns: list[dict[str, str]],
+    entity_label: str = "event",
+) -> list[dict[str, Any]]:
+    """Group event table rows for follow-up UX (organization or start month)."""
+    from collections import defaultdict
+
+    buckets: dict[str, list[dict[str, str]]] = defaultdict(list)
+    if group_by == "start_date":
+        for row in rows:
+            start = str(row.get("startDate") or "—")
+            key = start[:7] if start != "—" and len(start) >= 7 else "Unknown date"
+            buckets[key].append(row)
+        title_prefix = "Start month"
+    else:
+        for row in rows:
+            key = (
+                str(row.get("contractualOrganization") or row.get("principalOrganization") or "—").strip()
+                or "Unknown organization"
+            )
+            buckets[key].append(row)
+        title_prefix = "Organization"
+
+    sections: list[dict[str, Any]] = []
+    for label in sorted(buckets.keys(), key=lambda x: (x == "Unknown organization", x == "Unknown date", x)):
+        group_rows = project_event_rows(buckets[label], columns)
+        sections.append(
+            {
+                "title": f"{title_prefix}: {label} ({len(group_rows)} {entity_label}(s))",
+                "table": {"columns": columns, "rows": group_rows},
+            },
+        )
+    return sections
+
+
 def build_events_timeline_chart(rows: list[dict[str, str]]) -> dict[str, Any] | None:
     """Bar chart of event counts by start month (when dates exist)."""
+    from collections import Counter
+
     buckets: Counter[str] = Counter()
     for row in rows:
         start = str(row.get("startDate") or "—")
