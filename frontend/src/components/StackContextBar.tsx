@@ -37,9 +37,13 @@ export function StackContextBar({ region, stackStatus: stackFromChat }: Props) {
   }
 
   const last = stack.last_llm_context;
+  const ctxUsed =
+    stack.context_percent_used ??
+    last?.percent_used ??
+    (last?.percent_left != null ? 100 - last.percent_left : null);
   const summary = stack.bar_label || [
     stack.chat_model_label,
-    stack.context_percent_left != null ? `${stack.context_percent_left}% ctx left` : "ctx —",
+    ctxUsed != null ? `${ctxUsed}% ctx used` : "ctx —",
     `${stack.sources_count} sources`,
     region || stack.environment,
   ].join(" · ");
@@ -88,7 +92,7 @@ export function StackContextBar({ region, stackStatus: stackFromChat }: Props) {
                 <dt>Last LLM call</dt>
                 <dd>
                   ~{last.estimated_tokens?.toLocaleString()} / {last.budget_tokens?.toLocaleString()} tok (
-                  {last.percent_left}% left
+                  {last.percent_used ?? (last.percent_left != null ? 100 - last.percent_left : "—")}% used
                   {last.routing ? ", routing" : ", synthesis"}
                   {last.prompt_trimmed ? ", trimmed" : ""})
                 </dd>

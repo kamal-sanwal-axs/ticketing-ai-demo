@@ -175,6 +175,15 @@ button.link {
   color: var(--muted);
 }
 
+.sandbox-iframe {
+  width: 100%;
+  min-height: 320px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  margin: 0.75rem 0;
+}
+
 .profile {
   background: #0f1419;
   border-radius: 8px;

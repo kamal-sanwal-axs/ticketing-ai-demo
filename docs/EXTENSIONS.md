@@ -87,8 +87,17 @@ Then: `POST /api/plugins/greet-transform/invoke` with `{"parameters": {"name": "
 
 ## Wiring custom tools into the agent
 
-Plugins are **registered and testable** via the API today. The main LangGraph orchestrator still uses built-in APEX intents; next step is to expose `list_enabled_tools(user_id)` to the orchestrator as dynamic tools (same sandbox executor).
+Registered plugins are included in the orchestrator system prompt (`plugin_catalog_block`). The LLM may return **`action: call_plugin`** with `plugin_id` and `plugin_parameters` (or `parameters`). Execution goes through the same sandbox as `/api/plugins/{id}/invoke` (HTTP allowlist or script worker).
+
+**Deterministic shortcuts** (no classify/orchestrator LLM):
+
+- `run plugin my-plugin-id`, `invoke plugin …`, or `@my-plugin-id` → `call_plugin` when the id exists for the tenant.
+- Phrases matching the sandbox hint regex (e.g. “build a react chart”, “run python code”) → **`run_sandbox`** when `SANDBOX_TOOLKIT_ENABLED=true` — see [SANDBOX_TOOLKIT.md](./SANDBOX_TOOLKIT.md).
+
+Built-in apex-dev APIs still use **`call_api`** via dynamic OpenAPI tools ([DYNAMIC_TOOLS.md](./DYNAMIC_TOOLS.md)).
 
 ## Security note
 
 With `PLUGIN_SANDBOX_BACKEND=docker` and the worker image built, script plugins get **kernel-level isolation** per invoke. HTTP plugins remain the safest path for calling apex-dev APIs (no user code — server-side allowlisted `httpx` only).
+
+For **on-the-fly Python + React (Recharts) in disposable containers** and a LangGraph `sandbox_tool_run` node, see [SANDBOX_TOOLKIT.md](./SANDBOX_TOOLKIT.md).

@@ -24,6 +24,7 @@ PHASE_LABELS: dict[str, str] = {
     "semantic_turn": "Sentence-transformer topic & intent…",
     "orchestrator_llm": "Orchestrator LLM (next API step)…",
     "orchestrator_api": "LangGraph executing API call…",
+    "sandbox_tool_run": "Docker sandbox (Python / React)…",
     "synthesize_llm": "LLM answering from API data…",
 }
 

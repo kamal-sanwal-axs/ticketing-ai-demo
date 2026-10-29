@@ -77,8 +77,20 @@ def _legacy_intent_for_path(service_id: str, path: str, method: str) -> str | No
             return "b2b_flash_report"
     if service_id == "marketing" and method == "get" and "/v1/events" in path:
         return "marketing_events"
-    if service_id == "search" and method == "post" and path.rstrip("/") == "/v1/events":
-        return "search_events"
+    if service_id == "search":
+        if method == "post" and path.rstrip("/") == "/v1/events":
+            return "search_events"
+        if method == "post" and "/v1/events/suggest" in path:
+            return "search_events"
+        if "/v1/client-venues" in path:
+            return "list_client_venues"
+        if "/v1/customers" in path:
+            return "search_customers"
+        if "/v1/orders/list/payment-statuses" in path:
+            return "search_order_payment_statuses"
+        if "/v1/orders" in path:
+            return "search_orders"
+        return None
     for pattern, intent in _LEGACY_INTENT_RULES:
         if pattern.search(path):
             if intent in INTENTS:
@@ -310,6 +322,10 @@ def tool_matches_question(tool: DynamicTool, question: str) -> bool:
     if tool.legacy_intent == "search_customers":
         return looks_like_customer_search_request(bare)
     if tool.legacy_intent == "search_events":
+        from apex_rag_demo.agentic_event import looks_like_seat_inventory_demo
+
+        if _UUID_RE.search(bare) and looks_like_seat_inventory_demo(bare):
+            return False
         if looks_like_order_search_request(bare):
             return False
         return looks_like_named_event_search(bare) or (
@@ -320,6 +336,10 @@ def tool_matches_question(tool: DynamicTool, question: str) -> bool:
             return False
         return True
     if tool.legacy_intent == "list_client_venues":
+        from apex_rag_demo.agentic_event import looks_like_seat_inventory_demo
+
+        if _UUID_RE.search(bare) and looks_like_seat_inventory_demo(bare):
+            return False
         return "venue" in bare.lower() or "client venue" in bare.lower()
     if tool.legacy_intent == "get_event":
         from apex_rag_demo.reports_intent_helpers import looks_like_b2b_reports_question
@@ -362,6 +382,10 @@ def preferred_legacy_intent(question: str) -> str | None:
     )
 
     bare = strip_ui_region(question)
+    from apex_rag_demo.agentic_event import looks_like_seat_inventory_demo
+
+    if _UUID_RE.search(bare) and looks_like_seat_inventory_demo(bare):
+        return "get_event"
     if looks_like_b2b_reports_question(bare):
         resolved = resolve_reports_guard_intent(question)
         if resolved:

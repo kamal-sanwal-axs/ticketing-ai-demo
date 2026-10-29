@@ -34,9 +34,13 @@ flowchart TB
   L5 -->|need KB| KB[retrieve_agent_context]
   L5 -->|operational| ORCH[orchestrator_decide]
   KB --> ORCH
-  ORCH -->|call_api| EXEC[orchestrator_execute]
+  ORCH -->|call_api / call_plugin| EXEC[orchestrator_execute]
+  ORCH -->|run_sandbox| SBX[sandbox_tool_run]
   EXEC --> APEX[apex-dev HTTP]
+  EXEC --> PLG[user plugins HTTP/script]
+  SBX --> DOCK[Docker sandbox-toolkit]
   EXEC --> ORCH
+  SBX --> ORCH
   ORCH --> SYN
   SYN --> PERSIST[persist_session_memory]
 ```
@@ -49,7 +53,7 @@ flowchart TB
 | Chroma enrich | No | Role hints, session turns (`CHROMA_SYSTEM_ENRICH_TOP_K`) |
 | Neo4j enrich | No | Entity/context lines when `KG_NEO4J_ENABLED=true` |
 | Classify | Yes (skipped for hello) | `intent` + `need_kb_retrieval` |
-| Orchestrator | Yes | `call_api` / `finish`, intent, plan |
+| Orchestrator | Yes | `call_api` / `call_plugin` / `run_sandbox` / `finish`, intent, plan |
 | Plan (per intent) | Often | JSON plan (`eventId`, `pageSize`, …) |
 | Execute API | **No** | Real HTTP + JWT |
 | Synthesize | Sometimes | Prose from JSON (**formatters preferred for lists**) |
@@ -95,7 +99,8 @@ Recommended direction: **formatter-first** for read intents; LLM only for short 
 ## Related docs
 
 - [SETUP.md](./SETUP.md) — `.env`, processes, bring-up  
-- [EXTENSIONS.md](./EXTENSIONS.md) — declarative plugins, sandbox, checkpointer/store  
+- [EXTENSIONS.md](./EXTENSIONS.md) — declarative plugins, `call_plugin`, checkpointer/store  
+- [SANDBOX_TOOLKIT.md](./SANDBOX_TOOLKIT.md) — Docker Python/React jobs, `run_sandbox`  
 - [KG_NEO4J.md](./KG_NEO4J.md) — ontology, sync, runtime enrichment  
 - [CONFIG.md](./CONFIG.md) — environment variables  
 - [RAG_STACK.md](./RAG_STACK.md) — embeddings, Chroma, sync  

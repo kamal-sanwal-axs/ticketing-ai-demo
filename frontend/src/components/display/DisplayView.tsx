@@ -111,6 +111,15 @@ export function DisplayView({ display }: Props) {
 
       {display.footnote ? <p className="display-footnote muted">{display.footnote}</p> : null}
 
+      {display.type === "sandbox" && display.sandbox_html ? (
+        <iframe
+          className="sandbox-iframe"
+          title={display.title || "Sandbox output"}
+          sandbox="allow-scripts"
+          srcDoc={display.sandbox_html}
+        />
+      ) : null}
+
       {display.citations?.length ? (
         <div className="display-citations">
           <h4 className="display-section-title">Sources</h4>

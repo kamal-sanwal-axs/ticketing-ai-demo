@@ -44,3 +44,11 @@ services:
     image: ticketing-ai-demo-plugin-worker:local
     profiles:
       - plugins
+
+  sandbox-toolkit:
+    build:
+      context: ./docker/sandbox-toolkit
+      dockerfile: Dockerfile
+    image: ticketing-ai-demo-sandbox-toolkit:local
+    profiles:
+      - sandbox

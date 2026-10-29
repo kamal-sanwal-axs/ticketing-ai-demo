@@ -143,6 +143,8 @@ Highlights:
 - **Graph:** `KG_NEO4J_ENABLED`, `KG_ONTOLOGY_PATH`, `KG_GLINER_*`, `KG_ENRICH_MAX_HITS` — [KG_NEO4J.md](docs/KG_NEO4J.md)
 - **APIs:** `APEX_*_BASE_URL`, `APEX_*_SWAGGER_URL`, `REPORTS_*`, `APEX_MANIFEST_*` — [API_LINKS.md](docs/API_LINKS.md)
 - **Safety:** `DEMO_CLIENT_ID`, `DEMO_MUTATIONS_DRY_RUN` — mutations preview vs live + UI Confirm
+- **Extensions:** user HTTP/script plugins + orchestrator `call_plugin` — [EXTENSIONS.md](docs/EXTENSIONS.md)
+- **Sandbox toolkit:** Docker Python/React in chat (`run_sandbox`) — build `./scripts/build-sandbox-toolkit.sh`, [SANDBOX_TOOLKIT.md](docs/SANDBOX_TOOLKIT.md)
 
 ## Project layout
 
@@ -152,7 +154,9 @@ Highlights:
 | `apex_rag_demo/graph.py` | LangGraph workflow |
 | `apex_rag_demo/clients/` | HTTP clients per API |
 | `data/kb.json` | RAG knowledge snippets |
-| `docker-compose.yml` | ChromaDB service |
+| `docker-compose.yml` | Chroma, Neo4j; profiles `plugins` / `sandbox` for worker images |
+| `docs/EXTENSIONS.md` | User plugins, LangGraph store, script sandbox |
+| `docs/SANDBOX_TOOLKIT.md` | Docker Python/React sandbox API + chat node |
 | `docs/SETUP.md` | Processes, `.env` patterns, bring-up |
 | `docs/CONFIG.md` | All `.env` defaults |
 | `docs/KG_NEO4J.md` | Neo4j, ontology, GLiNER sync |

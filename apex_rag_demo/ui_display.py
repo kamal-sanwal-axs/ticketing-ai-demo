@@ -43,11 +43,18 @@ def _note_mock(payload: dict[str, Any] | None) -> str | None:
 
 
 def build_ui_display(state: dict[str, Any]) -> dict[str, Any] | None:
+    from apex_rag_demo.trace_payload import enrich_state_from_best_trace
+
+    state = enrich_state_from_best_trace(state)
     from apex_rag_demo.compound_request import build_compound_display
 
     compound_ui = build_compound_display(state)
     if compound_ui:
         return compound_ui
+
+    sandbox_ui = state.get("sandbox_display")
+    if isinstance(sandbox_ui, dict) and sandbox_ui.get("type"):
+        return sandbox_ui
 
     from apex_rag_demo.reports_display import build_reports_manifest_display
 

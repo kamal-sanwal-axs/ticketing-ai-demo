@@ -46,6 +46,7 @@ export type UiDisplay = {
   footnote?: string;
   citations?: { label?: string; href?: string; status?: string }[];
   pending_confirmation?: { mutation_token?: string };
+  sandbox_html?: string;
 };
 
 export type ChatResult = {
@@ -75,7 +76,7 @@ export type StackStatus = {
   kg_enabled?: boolean;
   context_budget_tokens?: number;
   context_routing_budget_tokens?: number;
-  context_percent_left?: number | null;
+  context_percent_used?: number | null;
   tool_count?: number;
   kb_chunks?: number;
   openapi_sources?: number;

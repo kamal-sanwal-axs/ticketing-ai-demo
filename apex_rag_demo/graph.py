@@ -51,6 +51,7 @@ class DemoState(_DemoStateRequired, total=False):
     need_kb_retrieval: bool
     chroma_system_context: str
     retrieval_candidates: list[str]
+    sandbox_display: dict
 
 
 def load_agent_context(state: DemoState) -> DemoState:
@@ -291,7 +292,9 @@ def _route_after_orchestrator_decide(state: DemoState) -> str:
         return "synthesize_answer"
     round_num = int(state.get("orchestrator_round") or 0)
     action = state.get("orchestrator_action")
-    if action in ("call_api", "call_plugin") and round_num < ORCHESTRATOR_MAX_ROUNDS:
+    if action in ("call_api", "call_plugin", "run_sandbox") and round_num < ORCHESTRATOR_MAX_ROUNDS:
+        if action == "run_sandbox":
+            return "sandbox_tool_run"
         return "orchestrator_execute"
     return "synthesize_answer"
 
@@ -353,6 +356,34 @@ def orchestrator_decide(state: DemoState) -> DemoState:
         if out["intent"] == "search_events":
             out["search_query"] = decision["action_plan"].get("query", "")
     return out
+
+
+def sandbox_tool_run(state: DemoState) -> DemoState:
+    from apex_rag_demo.chat_progress import emit_progress
+    from apex_rag_demo.sandbox_toolkit.chat_execute import execute_sandbox_from_plan
+    from apex_rag_demo.sandbox_toolkit.orchestrator import build_sandbox_display
+
+    emit_progress("sandbox_tool_run")
+    plan = state.get("action_plan") or {}
+    trace = list(state.get("api_trace") or [])
+    result = execute_sandbox_from_plan(plan if isinstance(plan, dict) else {})
+    trace.append({"sandbox": True, "plan": plan, "result": result, "error": result.get("error")})
+    display = build_sandbox_display(result)
+    answer = ""
+    if display and display.get("paragraphs"):
+        answer = str(display["paragraphs"][0])[:1200]
+    elif result.get("ok"):
+        answer = "Sandbox finished successfully."
+    return {
+        **state,
+        "api_trace": trace,
+        "api_payload": result,
+        "api_error": None if result.get("ok") else str(result.get("error")),
+        "intent": "explain",
+        "memory_source": "sandbox_toolkit",
+        "answer": answer if answer else state.get("answer", ""),
+        "sandbox_display": display,
+    }
 
 
 def orchestrator_execute(state: DemoState) -> DemoState:
@@ -444,6 +475,9 @@ def orchestrator_execute(state: DemoState) -> DemoState:
 def synthesize_answer(state: DemoState) -> DemoState:
     if state.get("pipeline_error"):
         return state
+    from apex_rag_demo.trace_payload import enrich_state_from_best_trace
+
+    state = enrich_state_from_best_trace(state)
     from apex_rag_demo.crud_policy import WriteKind, write_kind_for_intent
     from apex_rag_demo.id_prompts import clarify_missing_event_id
     from apex_rag_demo.intent_semantic import is_conversational_message
@@ -658,6 +692,7 @@ def build_graph():
     graph.add_node("retrieve_agent_context", retrieve_agent_context)
     graph.add_node("orchestrator_decide", orchestrator_decide)
     graph.add_node("orchestrator_execute", orchestrator_execute)
+    graph.add_node("sandbox_tool_run", sandbox_tool_run)
     graph.add_node("extract_api_facts", extract_api_facts)
     graph.add_node("synthesize_answer", synthesize_answer)
     graph.add_node("persist_session_memory", persist_session_memory)
@@ -690,10 +725,12 @@ def build_graph():
         _route_after_orchestrator_decide,
         {
             "orchestrator_execute": "orchestrator_execute",
+            "sandbox_tool_run": "sandbox_tool_run",
             "synthesize_answer": "synthesize_answer",
         },
     )
     graph.add_edge("orchestrator_execute", "extract_api_facts")
+    graph.add_edge("sandbox_tool_run", "extract_api_facts")
     graph.add_conditional_edges(
         "extract_api_facts",
         _route_after_extract_api_facts,

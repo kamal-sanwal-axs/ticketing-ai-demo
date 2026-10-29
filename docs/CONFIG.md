@@ -142,7 +142,22 @@ Compose-only (not read by Python): `NEO4J_HTTP_PORT`, `NEO4J_BOLT_PORT`.
 | `PLUGIN_DOCKER_IMAGE` | `ticketing-ai-demo-plugin-worker:local` | Worker image |
 | `PLUGIN_TENANT_STRICT` | `true` | Tenant scoping for plugins |
 
-See [EXTENSIONS.md](./EXTENSIONS.md), [DYNAMIC_TOOLS.md](./DYNAMIC_TOOLS.md).
+### Docker sandbox toolkit (Python + React)
+
+Separate from script plugins: disposable containers for **multi-file Python** or **React + Recharts** jobs (chat orchestrator `run_sandbox` or `POST /api/sandbox/run`). See [SANDBOX_TOOLKIT.md](./SANDBOX_TOOLKIT.md).
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `SANDBOX_TOOLKIT_ENABLED` | `true` | Master switch; when false, sandbox node and API reject runs |
+| `SANDBOX_TOOLKIT_IMAGE` | `ticketing-ai-demo-sandbox-toolkit:local` | Image from `./scripts/build-sandbox-toolkit.sh` |
+| `SANDBOX_TOOLKIT_TIMEOUT_SEC` | `120` | Per-job wall clock (Docker run) |
+| `SANDBOX_PIP_ALLOWLIST` | `pandas,numpy,matplotlib,httpx,pillow` | Extra `pip_packages` names (preinstalled in image) |
+| `SANDBOX_NPM_ALLOWLIST` | `react,react-dom,recharts` | Extra `npm_packages` names |
+| `SANDBOX_MAX_SOURCE_BYTES` | `65536` | Max total bytes of `files` in a job |
+
+`GET /api/runtime/status` → `sandbox_toolkit`: `enabled`, `image`, `docker_cli`, `image_ready`, allowlists.
+
+See [EXTENSIONS.md](./EXTENSIONS.md), [DYNAMIC_TOOLS.md](./DYNAMIC_TOOLS.md), [SANDBOX_TOOLKIT.md](./SANDBOX_TOOLKIT.md).
 
 ## apex-dev API bases
 

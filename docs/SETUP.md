@@ -28,6 +28,16 @@ docker compose up -d chroma          # vectors
 docker compose up -d neo4j           # optional knowledge graph
 ```
 
+**Optional Docker images** (one-shot workers — build, do not `up` as services):
+
+```bash
+docker compose --profile plugins build plugin-worker    # script plugins (QuickJS / RestrictedPython)
+./scripts/build-sandbox-toolkit.sh                      # chat sandbox Python + React
+# or: docker compose --profile sandbox build sandbox-toolkit
+```
+
+Verify: `curl -s http://localhost:8080/api/runtime/status` → `script_sandbox`, `sandbox_toolkit.image_ready`.
+
 Data persists under `./data/chroma/` and `./data/neo4j/`.
 
 ## Embedding backends
@@ -159,4 +169,5 @@ uvicorn apex_rag_demo.web.app:app --reload --port 8080
 ## Related
 
 - [CONFIG.md](./CONFIG.md) — complete variable table  
+- [SANDBOX_TOOLKIT.md](./SANDBOX_TOOLKIT.md) — sandbox Docker image and chat `run_sandbox`  
 - [README.md](../README.md) — quick start  

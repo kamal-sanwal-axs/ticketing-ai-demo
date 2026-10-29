@@ -163,6 +163,29 @@ PLUGIN_DOCKER_IMAGE = os.getenv(
 ).strip()
 PLUGIN_TENANT_STRICT = os.getenv("PLUGIN_TENANT_STRICT", "true").lower() in ("1", "true", "yes")
 
+# Docker sandbox toolkit (on-the-fly Python / React in disposable containers)
+SANDBOX_TOOLKIT_ENABLED = os.getenv("SANDBOX_TOOLKIT_ENABLED", "true").lower() in (
+    "1",
+    "true",
+    "yes",
+)
+SANDBOX_TOOLKIT_IMAGE = os.getenv(
+    "SANDBOX_TOOLKIT_IMAGE",
+    "ticketing-ai-demo-sandbox-toolkit:local",
+).strip()
+SANDBOX_TOOLKIT_TIMEOUT_SEC = int(os.getenv("SANDBOX_TOOLKIT_TIMEOUT_SEC", "120"))
+_SANDBOX_PIP = os.getenv(
+    "SANDBOX_PIP_ALLOWLIST",
+    "pandas,numpy,matplotlib,httpx,pillow",
+)
+SANDBOX_PIP_ALLOWLIST = frozenset(p.strip().lower() for p in _SANDBOX_PIP.split(",") if p.strip())
+_SANDBOX_NPM = os.getenv(
+    "SANDBOX_NPM_ALLOWLIST",
+    "react,react-dom,recharts",
+)
+SANDBOX_NPM_ALLOWLIST = frozenset(p.strip().lower() for p in _SANDBOX_NPM.split(",") if p.strip())
+SANDBOX_MAX_SOURCE_BYTES = int(os.getenv("SANDBOX_MAX_SOURCE_BYTES", "65536"))
+
 DYNAMIC_TOOLS_ENABLED = os.getenv("DYNAMIC_TOOLS_ENABLED", "true").lower() in ("1", "true", "yes")
 
 RAG_KEYWORD_FALLBACK = os.getenv("RAG_KEYWORD_FALLBACK", "true").lower() in (

@@ -90,10 +90,13 @@ def get_event_enrichment_flags(bare_question: str) -> dict[str, bool]:
     from apex_rag_demo.inventory_assessment import looks_like_price_code_setup_question
 
     if looks_like_price_code_setup_question(bare_question):
+        include_tt = bool(
+            re.search(r"\bticket\s+types?\b|\bsections?\b|\bzones?\b|\bprice\s+levels?\b", bare_question, re.I)
+        )
         return {
             "includeInventory": True,
             "includeOrgHierarchy": False,
-            "includeTicketTypes": False,
+            "includeTicketTypes": include_tt,
         }
     if wants_event_details_only(bare_question):
         return {

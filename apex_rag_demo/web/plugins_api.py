@@ -13,6 +13,9 @@ from apex_rag_demo.plugins.registry import delete_plugin, get_plugin, list_plugi
 from apex_rag_demo.plugins.tenant import tenant_scope
 from apex_rag_demo.plugins.sandbox import SandboxViolation, execute_plugin
 from apex_rag_demo.runtime.graph_runtime import runtime_status
+from apex_rag_demo.sandbox_toolkit.docker_runner import sandbox_toolkit_status
+from apex_rag_demo.sandbox_toolkit.models import SandboxJob
+from apex_rag_demo.sandbox_toolkit import run_sandbox_job
 
 router = APIRouter(prefix="/api", tags=["plugins"])
 
@@ -36,7 +39,23 @@ def _auth(authorization: str | None) -> tuple[str, str]:
 
 @router.get("/runtime/status")
 async def get_runtime_status() -> dict[str, Any]:
-    return runtime_status()
+    status = runtime_status()
+    status["sandbox_toolkit"] = sandbox_toolkit_status()
+    return status
+
+
+class SandboxRunRequest(BaseModel):
+    job: SandboxJob
+
+
+@router.post("/sandbox/run")
+async def api_run_sandbox(
+    body: SandboxRunRequest,
+    authorization: Annotated[str | None, Header()] = None,
+) -> dict[str, Any]:
+    _auth(authorization)
+    result = run_sandbox_job(body.job)
+    return result.model_dump(mode="json")
 
 
 @router.get("/tools")

@@ -363,6 +363,14 @@ function renderDisplay(display) {
 
   if (display.footnote) root.appendChild(el("p", "display-footnote muted", display.footnote));
 
+  if (display.type === "sandbox" && display.sandbox_html) {
+    const frame = el("iframe", "sandbox-iframe");
+    frame.title = display.title || "Sandbox output";
+    frame.setAttribute("sandbox", "allow-scripts");
+    frame.srcdoc = display.sandbox_html;
+    root.appendChild(frame);
+  }
+
   if (display.citations?.length) {
     const block = el("div", "display-citations");
     block.appendChild(el("h4", "display-section-title", "Sources"));
@@ -504,9 +512,12 @@ function renderStackDetails(stack, region) {
     ],
   ];
   if (last) {
+    const usedPct =
+      last.percent_used ??
+      (last.percent_left != null ? 100 - last.percent_left : null);
     rows.push([
       "Last LLM call",
-      `~${last.estimated_tokens?.toLocaleString()} / ${last.budget_tokens?.toLocaleString()} tok (${last.percent_left}% left${last.routing ? ", routing" : ", synthesis"}${last.prompt_trimmed ? ", trimmed" : ""})`,
+      `~${last.estimated_tokens?.toLocaleString()} / ${last.budget_tokens?.toLocaleString()} tok (${usedPct != null ? `${usedPct}% used` : "—"}${last.routing ? ", routing" : ", synthesis"}${last.prompt_trimmed ? ", trimmed" : ""})`,
     ]);
   }
   rows.push([
@@ -526,9 +537,14 @@ function renderStackDetails(stack, region) {
 
 function applyStackStatus(stack, region) {
   if (!stack) return;
+  const last = stack.last_llm_context;
+  const ctxUsed =
+    stack.context_percent_used ??
+    last?.percent_used ??
+    (last?.percent_left != null ? 100 - last.percent_left : null);
   const summary = stack.bar_label || [
     stack.chat_model_label || "LLM",
-    stack.context_percent_left != null ? `${stack.context_percent_left}% ctx left` : "ctx —",
+    ctxUsed != null ? `${ctxUsed}% ctx used` : "ctx —",
     `${stack.sources_count || 0} sources`,
     region || stack.environment || "",
   ].join(" · ");

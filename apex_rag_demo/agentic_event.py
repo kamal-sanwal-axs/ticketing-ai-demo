@@ -251,3 +251,34 @@ def try_agentic_orchestrator_step(
             }
 
     return None
+
+
+def try_agentic_finish_step(
+    question: str,
+    *,
+    api_trace: list[dict[str, Any]] | None,
+    session_focus: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    """Stop orchestrator loops once get_event (+ inventory when asked) is already in the trace."""
+    from apex_rag_demo.trace_payload import find_best_get_event_from_trace
+
+    trace = list(api_trace or [])
+    if not trace:
+        return None
+    bare = strip_ui_region(question)
+    eid = resolve_event_id(question, {}, session_focus)
+    if not eid:
+        return None
+    need_inv = looks_like_seat_inventory_demo(bare)
+    hit = find_best_get_event_from_trace(trace, event_id=eid, need_inventory=need_inv)
+    if not hit and need_inv:
+        hit = find_best_get_event_from_trace(trace, event_id=eid, need_inventory=False)
+    if not hit:
+        return None
+    plan, _payload = hit
+    return {
+        "orchestrator_action": "finish",
+        "intent": "get_event",
+        "action_plan": plan,
+        "orchestrator_reason": "agentic_sufficient_get_event",
+    }

@@ -95,7 +95,7 @@ def build_ui_stack_status(*, region: str | None = None) -> dict[str, Any]:
     sources_count = tool_count + kb_chunks + openapi_files
 
     last = get_last_llm_context()
-    ctx_left = last.get("percent_left") if last else None
+    ctx_used = last.get("percent_used") if last else None
 
     return {
         "environment": _environment_label(),
@@ -110,14 +110,14 @@ def build_ui_stack_status(*, region: str | None = None) -> dict[str, Any]:
         "context_budget_tokens": CHAT_CONTEXT_MAX_TOKENS,
         "context_routing_budget_tokens": CHAT_CONTEXT_MAX_TOKENS_ROUTING,
         "last_llm_context": last,
-        "context_percent_left": ctx_left,
+        "context_percent_used": ctx_used,
         "tool_count": tool_count,
         "kb_chunks": kb_chunks,
         "openapi_sources": openapi_files,
         "sources_count": sources_count,
         "bar_label": _format_bar_label(
             model_label=_display_model_name(CHAT_MODEL),
-            context_percent_left=ctx_left,
+            context_percent_used=ctx_used,
             sources_count=sources_count,
             region=region,
             environment=_environment_label(),
@@ -128,14 +128,14 @@ def build_ui_stack_status(*, region: str | None = None) -> dict[str, Any]:
 def _format_bar_label(
     *,
     model_label: str,
-    context_percent_left: int | None,
+    context_percent_used: int | None,
     sources_count: int,
     region: str | None,
     environment: str,
 ) -> str:
     parts = [model_label]
-    if context_percent_left is not None:
-        parts.append(f"{context_percent_left}% ctx left")
+    if context_percent_used is not None:
+        parts.append(f"{context_percent_used}% ctx used")
     else:
         parts.append("ctx —")
     parts.append(f"{sources_count} sources")

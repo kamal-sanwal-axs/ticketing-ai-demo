@@ -17,7 +17,7 @@ You decide the NEXT step: call a live API, or finish and let the answer LLM use 
 
 Return JSON only:
 {{
-  "action": "call_api" | "call_plugin" | "finish",
+  "action": "call_api" | "call_plugin" | "run_sandbox" | "finish",
   "tool_id": "<dynamic tool id from catalog, preferred>",
   "parameters": {{ ... request fields: pageSize, query, keyword, eventId, ... }},
   "intent": "<legacy intent fallback if no tool_id>",
@@ -32,7 +32,8 @@ Rules:
 - Use finish when api_trace already has enough data to answer, or intent is explain with no API.
 - Fan orders need email/order number; event catalog/list uses marketing GET /v1/events tool when listed.
 - You may chain calls up to {ORCHESTRATOR_MAX_ROUNDS} rounds.
-- Use call_plugin only for registered user plugins."""
+- Use call_plugin only for registered user plugins.
+- Use run_sandbox for custom Python or React+Recharts code in Docker (see sandbox block below)."""
 
 
 def _api_catalog_block() -> str:
@@ -110,6 +111,12 @@ def decide_orchestrator_step(
     if reports_step:
         return reports_step
 
+    from apex_rag_demo.sandbox_toolkit.orchestrator import try_sandbox_orchestrator_step
+
+    sandbox_step = try_sandbox_orchestrator_step(question, api_trace=api_trace)
+    if sandbox_step:
+        return sandbox_step
+
     from apex_rag_demo.agentic_event import try_agentic_orchestrator_step
 
     agentic = try_agentic_orchestrator_step(
@@ -122,6 +129,16 @@ def decide_orchestrator_step(
     )
     if agentic:
         return agentic
+
+    from apex_rag_demo.agentic_event import try_agentic_finish_step
+
+    finish = try_agentic_finish_step(
+        question,
+        api_trace=api_trace,
+        session_focus=session_focus,
+    )
+    if finish:
+        return finish
 
     from apex_rag_demo.agent_fast_read import try_deterministic_orchestrator_step
 
@@ -150,9 +167,12 @@ def decide_orchestrator_step(
         }
     classified_intent = guard_api_intent(classified_intent, question)
     focus = session_focus or {}
+    from apex_rag_demo.sandbox_toolkit.orchestrator import orchestrator_sandbox_catalog_block
+
     user = (
         f"{_api_catalog_block()}\n\n"
         f"{plugin_catalog_block(user_id)}\n\n"
+        f"{orchestrator_sandbox_catalog_block()}\n\n"
         f"classified_intent (hint): {classified_intent}\n"
         f"session_focus: {json.dumps(focus, default=str)[:600]}\n"
         f"round: {orchestrator_round} / max {ORCHESTRATOR_MAX_ROUNDS}\n\n"
@@ -174,10 +194,23 @@ def decide_orchestrator_step(
         data = {"action": "call_api", "intent": classified_intent, "plan": {}, "reason": "parse_fallback"}
 
     from apex_rag_demo.plugins.orchestrator_plugins import parse_call_plugin_from_llm
+    from apex_rag_demo.sandbox_toolkit.orchestrator import (
+        orchestrator_sandbox_catalog_block,
+        parse_sandbox_job_from_llm,
+    )
 
     plugin_decision = parse_call_plugin_from_llm(data)
     if plugin_decision:
         return plugin_decision
+
+    sandbox_job = parse_sandbox_job_from_llm(data)
+    if sandbox_job:
+        return {
+            "orchestrator_action": "run_sandbox",
+            "intent": "explain",
+            "action_plan": sandbox_job.model_dump(mode="json"),
+            "orchestrator_reason": str(data.get("reason") or sandbox_job.reason or "run_sandbox"),
+        }
 
     action = str(data.get("action") or "finish").strip().lower()
     intent = str(data.get("intent") or classified_intent).strip().lower()
@@ -189,11 +222,15 @@ def decide_orchestrator_step(
         dynamic_tools_enabled,
         get_dynamic_tool,
         parameters_to_action_plan,
+        tool_matches_question,
     )
 
     if dynamic_tools_enabled() and tool_id:
         tool = get_dynamic_tool(tool_id)
-        if tool:
+        if tool and not tool_matches_question(tool, question):
+            tool_id = ""
+            plan = data.get("plan") if isinstance(data.get("plan"), dict) else {}
+        elif tool:
             intent = tool.legacy_intent
             plan = parameters_to_action_plan(tool, params or plan, question)
 
@@ -220,6 +257,22 @@ def decide_orchestrator_step(
                 plan = {}
 
     if action == "call_api" and intent != "explain":
+        from apex_rag_demo.agentic_event import looks_like_seat_inventory_demo
+        from apex_rag_demo.event_query_helpers import get_event_enrichment_flags
+        from apex_rag_demo.id_prompts import resolve_event_id
+
+        bare = strip_ui_region(question)
+        eid = resolve_event_id(question, plan, session_focus)
+        if (
+            eid
+            and looks_like_seat_inventory_demo(bare)
+            and intent in ("search_events", "list_client_venues", "inventory_zones")
+        ):
+            flags = get_event_enrichment_flags(bare)
+            flags.setdefault("includeInventory", True)
+            flags.setdefault("includeTicketTypes", True)
+            intent = guard_api_intent("get_event", question)
+            plan = {"eventId": eid, **flags, **{k: v for k, v in plan.items() if k == "_agentic"}}
         if not plan and not tool_id:
             plan = plan_for_intent(
                 intent,

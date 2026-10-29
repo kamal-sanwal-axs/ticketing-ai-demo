@@ -9,6 +9,12 @@ from apex_rag_demo.dynamic_tools import (
 def test_openapi_catalog_loads():
     catalog = load_dynamic_tool_catalog()
     assert len(catalog) >= 10
+    bad = [
+        t
+        for t in catalog.values()
+        if "list-event-statuses" in t.path_template or "list-venues" in t.path_template
+    ]
+    assert not bad, f"Auxiliary search list endpoints should not be tools: {[t.tool_id for t in bad]}"
     sample = next(iter(catalog.values()))
     assert sample.tool_id
     assert sample.legacy_intent in (
