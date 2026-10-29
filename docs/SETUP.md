@@ -122,7 +122,16 @@ Mutation safety: `DEMO_MUTATIONS_DRY_RUN=true` previews all writes; `false` allo
 
 ## Minimal bring-up
 
-**Project venv** (Chroma sync, web app, in-process embeddings):
+**Automated (recommended):**
+
+```bash
+cd ticketing-ai-demo
+./scripts/setup-stack.sh
+```
+
+Checks Python 3.10+, creates **`.venv`**, copies **`.env`**, prepares **data/** (Chroma, Neo4j, LangGraph SQLite), starts **Docker** when available (warns and continues without Docker), downloads embed/rerank models, **`sync_index`** when Chroma is up, optional **`sync_kg_index`** when `KG_NEO4J_ENABLED=true`, and checks **llama.cpp** venv (`LLAMA_VENV`, default `~/.venv-llama-cpp`). Options: `--skip-docker`, `--skip-models`, `--skip-sync`, `--setup-llama-venv`, `--help`.
+
+**Manual** (same end state):
 
 ```bash
 cd ticketing-ai-demo

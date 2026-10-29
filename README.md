@@ -9,7 +9,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 
-# See docs/SETUP.md for processes, docs/RAG_STACK.md for vector sync
+./scripts/setup-stack.sh             # or manual steps in docs/SETUP.md
 python scripts/download_embedding_model.py
 ./scripts/run-embed-server.sh          # when RAG_EMBEDDING_BACKEND=http (default in .env.example)
 docker compose up -d chroma            # neo4j optional: KG_NEO4J_ENABLED=true
